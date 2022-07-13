@@ -2,16 +2,15 @@ syntax = "proto3";
 
 option go_package = "pkg/grpc";
 
-service Conoha {
-    rpc ServerCommand (ServerCommandMessage) returns (ServerCommandResponse) {}
+service ConohaService {
+    rpc Minecraft (MinecraftRequest) returns (MinecraftResponse);
 }
 
-message ServerCommandMessage {
-    string channel_id = 1;
-    string bot_name = 2;
-    string command = 3;
+message MinecraftRequest {
+    string command = 1;
+    repeated string args = 2;
 }
 
-message ServerCommandResponse {
+message MinecraftResponse {
     string message = 1;
 }
