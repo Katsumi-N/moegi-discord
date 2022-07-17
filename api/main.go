@@ -8,6 +8,8 @@ import (
 	"os"
 	"os/signal"
 
+	"grpc-conoha/api/conoha"
+	"grpc-conoha/config"
 	conohapb "grpc-conoha/pkg/grpc"
 
 	"google.golang.org/grpc"
@@ -20,9 +22,21 @@ type conohaServer struct {
 
 // サービスメソッドのサンプル
 func (s *conohaServer) Minecraft(ctx context.Context, req *conohapb.MinecraftRequest) (*conohapb.MinecraftResponse, error) {
-	return &conohapb.MinecraftResponse{
-		Message: fmt.Sprintf("Hello, command is %s", req.GetCommand()),
-	}, nil
+	token := conoha.GetToken(config.Config.Username, config.Config.Password, config.Config.TenantId)
+	if req.GetCommand() == "!server" {
+		return &conohapb.MinecraftResponse{
+			Message: fmt.Sprintf("Hello, command is %s", req.GetCommand()),
+		}, nil
+	}
+	if req.GetCommand() == "!start" {
+
+	}
+	if req.GetCommand() == "!stop" {
+
+	}
+	if req.GetCommand() == "!reboot" {
+
+	}
 }
 
 // 自作サービス構造体のコンストラクタ
