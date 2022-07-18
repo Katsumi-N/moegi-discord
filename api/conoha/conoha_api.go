@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"time"
 )
 
 const identityURL = "https://identity.tyo2.conoha.io/v2.0/"
@@ -88,14 +89,43 @@ func GetToken(userName string, password string, tenantId string) string {
 	return access.Access.Token.Id
 }
 
-func StartServer(token string) (resBody []byte, status int) {
+func StartServer(token string) (resBody []byte, statusCode int) {
+	// サーバーの状態を確認
+	_, flavorId := GetServerStatus(token)
+
+	// メモリを4gbに変更
+	if flavorId != config.Config.Flavor4gb {
+		_, statusCode = ChangeServerFlavor(token, flavorId, "4gb")
+		fmt.Printf("status %d", statusCode)
+		if statusCode != 202 {
+			log.Print("error at ChangeServerFlavor")
+			return nil, statusCode
+		}
+		time.Sleep(10 * time.Second)
+
+		statusCheck, flavorChanged := GetServerStatus(token)
+		log.Printf("resize -> status: %s, flavor: %s", statusCheck, flavorChanged)
+		_, resizeStatusCode := ConfirmResize(token)
+		if resizeStatusCode != 204 {
+			time.Sleep(10 * time.Second) // 10秒待ってから再リクエスト
+			_, _ = ConfirmResize(token)
+		}
+	}
+
+	status, flavorId := GetServerStatus(token)
+	if status != "SHUTOFF" || flavorId != config.Config.Flavor4gb {
+		// リトライを求めるHTTPステータスはどれ？とりあえず503(Service Unavailable)にしておく
+		return []byte(status), 503
+	}
+	log.Printf("memory: 4gb, status: %s", status)
+
 	url := config.Config.TenantId + "/servers/" + config.Config.ServerId + "/action"
 	body := fmt.Sprintf("{\"os-start\":\"null\"}")
-	resBody, status, err := doRequest("POST", computeURL, url, token, body, map[string]string{})
+	resBody, statusCode, err := doRequest("POST", computeURL, url, token, body, map[string]string{})
 	if err != nil {
 		log.Print(err)
 	}
-	return resBody, status
+	return resBody, statusCode
 }
 
 func StopServer(token string) (resBody []byte, status int) {
