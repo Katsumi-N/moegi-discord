@@ -22,4 +22,5 @@ require (
 	google.golang.org/grpc v1.48.0 // indirect
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.2.0 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
+	gopkg.in/ini.v1 v1.66.6 // indirect
 )

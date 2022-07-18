@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"strconv"
 
 	"grpc-conoha/api/conoha"
 	"grpc-conoha/config"
@@ -29,14 +30,19 @@ func (s *conohaServer) Minecraft(ctx context.Context, req *conohapb.MinecraftReq
 		}, nil
 	}
 	if req.GetCommand() == "!start" {
-
+		fmt.Println(token)
+		_, statusCode := conoha.StartServer(token)
+		return &conohapb.MinecraftResponse{
+			Message: strconv.Itoa(statusCode),
+		}, nil
 	}
-	if req.GetCommand() == "!stop" {
+	// if req.GetCommand() == "!stop" {
 
-	}
-	if req.GetCommand() == "!reboot" {
+	// }
+	// if req.GetCommand() == "!reboot" {
 
-	}
+	// }
+	return nil, nil
 }
 
 // 自作サービス構造体のコンストラクタ
