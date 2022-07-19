@@ -102,7 +102,6 @@ func StartServer(token string) (resBody []byte, statusCode int) {
 			log.Print("error at ChangeServerFlavor")
 			return nil, statusCode
 		}
-		// now := time.Now()
 		// statusが"VERIFY_RESIZE"になってからconfirmする
 		// 約6分かかる
 		for {
@@ -112,8 +111,6 @@ func StartServer(token string) (resBody []byte, statusCode int) {
 				break
 			}
 		}
-		// log.Printf("statusの変更にかかった時間: %vms", time.Since(now))
-
 		_, resizeStatusCode := ConfirmResize(token)
 		if resizeStatusCode != 204 {
 			time.Sleep(10 * time.Second) // 10秒待ってから再リクエスト
@@ -145,14 +142,66 @@ func StartServer(token string) (resBody []byte, statusCode int) {
 	return resBody, statusCode
 }
 
-func StopServer(token string) (resBody []byte, status int) {
-	url := config.Config.TenantId + "/servers/" + config.Config.ServerId + "/action"
-	body := fmt.Sprintf("{\"os-stop\":\"null\"}")
-	resBody, status, err := doRequest("POST", computeURL, url, token, body, map[string]string{})
-	if err != nil {
-		log.Print(err)
+func StopServer(token string) (resBody []byte, statusCode int) {
+	log.Printf("Stop server")
+
+	status, flavorId := GetServerStatus(token)
+	if status == "ACTIVE" {
+		url := config.Config.TenantId + "/servers/" + config.Config.ServerId + "/action"
+		body := fmt.Sprintf("{\"os-stop\":\"null\"}")
+		_, _, err := doRequest("POST", computeURL, url, token, body, map[string]string{})
+		if err != nil {
+			log.Print(err)
+		}
 	}
-	return resBody, status
+	for {
+		time.Sleep(10 * time.Second)
+		status, _ := GetServerStatus(token)
+		if status == "SHUTOFF" {
+			break
+		}
+	}
+
+	// メモリを1gbに変更
+	if flavorId == config.Config.Flavor4gb {
+		_, statusCode = ChangeServerFlavor(token, "4gb", "1gb")
+		fmt.Printf("status %d", statusCode)
+		if statusCode != 202 {
+			log.Print("error at ChangeServerFlavor")
+			return nil, statusCode
+		}
+		// statusが"VERIFY_RESIZE"になってからconfirmする
+		// 約6分かかる
+		for {
+			time.Sleep(30 * time.Second)
+			status, _ := GetServerStatus(token)
+			if status == "VERIFY_RESIZE" {
+				break
+			}
+		}
+		_, resizeStatusCode := ConfirmResize(token)
+		if resizeStatusCode != 204 {
+			time.Sleep(10 * time.Second) // 10秒待ってから再リクエスト
+			_, _ = ConfirmResize(token)
+		}
+
+		// VERIFY_RESIZE->SHUTOFF まで約90秒待つ
+		for {
+			status, _ := GetServerStatus(token)
+			if status == "SHUTOFF" {
+				break
+			}
+			time.Sleep(10 * time.Second)
+		}
+
+		status, flavorId = GetServerStatus(token)
+		if status != "SHUTOFF" || flavorId != config.Config.Flavor1gb {
+			// リトライを求めるHTTPステータスは503(Service Unavailable)にしておく
+			return []byte(status), 503
+		}
+	}
+
+	return resBody, statusCode
 }
 
 func RebootServer(token string) (resBody []byte, status int) {
