@@ -139,7 +139,7 @@ func StartServer(token string) (resBody []byte, statusCode int) {
 	if err != nil {
 		log.Print(err)
 	}
-	return resBody, statusCode
+	return resBody, statusCode // 202
 }
 
 func StopServer(token string) (resBody []byte, statusCode int) {
@@ -201,7 +201,7 @@ func StopServer(token string) (resBody []byte, statusCode int) {
 		}
 	}
 
-	return resBody, statusCode
+	return resBody, statusCode // 202
 }
 
 func RebootServer(token string) (resBody []byte, status int) {

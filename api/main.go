@@ -29,20 +29,38 @@ func (s *conohaServer) Minecraft(ctx context.Context, req *conohapb.MinecraftReq
 		}, nil
 	}
 	if req.GetCommand() == "!start" {
-		status, _ := conoha.StartServer(token)
+		status, statusCode := conoha.StartServer(token)
+		is_normal := true
+		if statusCode != 202 {
+			is_normal = false
+		}
 		return &conohapb.MinecraftResponse{
-			Message: string(status),
+			Message:  string(status),
+			IsNormal: is_normal,
 		}, nil
 	}
 	if req.GetCommand() == "!stop" {
-		status, _ := conoha.StopServer(token)
+		status, statusCode := conoha.StopServer(token)
+		is_normal := true
+		if statusCode != 202 {
+			is_normal = false
+		}
 		return &conohapb.MinecraftResponse{
-			Message: string(status),
+			Message:  string(status),
+			IsNormal: is_normal,
 		}, nil
 	}
-	// if req.GetCommand() == "!reboot" {
-
-	// }
+	if req.GetCommand() == "!reboot" {
+		status, statusCode := conoha.RebootServer(token)
+		is_normal := true
+		if statusCode != 202 {
+			is_normal = false
+		}
+		return &conohapb.MinecraftResponse{
+			Message:  string(status),
+			IsNormal: is_normal,
+		}, nil
+	}
 	return nil, nil
 }
 
