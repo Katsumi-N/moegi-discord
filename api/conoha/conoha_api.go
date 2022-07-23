@@ -42,7 +42,7 @@ func doRequest(method, base string, urlPath string, tokenId string, data string,
 	}
 	// 相対パス→絶対パス
 	endpoint := baseURL.ResolveReference(apiURL).String()
-	log.Printf("action=doRequest endpoint=%s", endpoint)
+	// log.Printf("action=doRequest endpoint=%s", endpoint)
 	//リクエストの作成
 	req, err := http.NewRequest(method, endpoint, bytes.NewBufferString(data))
 	if err != nil {
@@ -90,10 +90,9 @@ func GetToken(userName string, password string, tenantId string) string {
 }
 
 func StartServer(token string) (resBody []byte, statusCode int) {
-	log.Printf("Start server")
+	// log.Printf("Start server")
 	// サーバーの状態を確認
 	status, flavorId := GetServerStatus(token)
-	log.Print(status)
 	// メモリを4gbに変更
 	if flavorId != config.Config.Flavor4gb {
 		_, statusCode = ChangeServerFlavor(token, "1gb", "4gb")
@@ -143,7 +142,7 @@ func StartServer(token string) (resBody []byte, statusCode int) {
 }
 
 func StopServer(token string) (resBody []byte, statusCode int) {
-	log.Printf("Stop server")
+	// log.Printf("Stop server")
 
 	status, flavorId := GetServerStatus(token)
 	if status == "ACTIVE" {

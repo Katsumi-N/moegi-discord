@@ -23,6 +23,7 @@ type conohaServer struct {
 // サービスメソッドのサンプル
 func (s *conohaServer) Minecraft(ctx context.Context, req *conohapb.MinecraftRequest) (*conohapb.MinecraftResponse, error) {
 	token := conoha.GetToken(config.Config.Username, config.Config.Password, config.Config.TenantId)
+
 	if req.GetCommand() == "!server" {
 		status, _ := conoha.GetServerStatus(token)
 		return &conohapb.MinecraftResponse{
