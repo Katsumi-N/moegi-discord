@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"grpc-conoha/config"
@@ -23,9 +25,10 @@ func main() {
 	defer dg.Close()
 	// dg.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsGuilds | discordgo.IntentsGuildMessages)
 	dg.AddHandler(Minecraft)
+	dg.AddHandler(Introduction)
 	err = dg.Open()
 	if err != nil {
-		log.Printf("error opening connection,", err)
+		log.Println("error opening connection,", err)
 		return
 	}
 	sc := make(chan os.Signal, 1)
@@ -34,7 +37,23 @@ func main() {
 
 }
 
+func Introduction(s *discordgo.Session, m *discordgo.MessageCreate) {
+	command := m.Content
+	if command != "!intro" {
+		return
+	}
+	introMessage, err := ioutil.ReadFile("discord/self-intro.txt")
+	if err != nil {
+		return
+	}
+	s.ChannelMessageSend(m.ChannelID, string(introMessage))
+}
+
 func Minecraft(s *discordgo.Session, m *discordgo.MessageCreate) {
+	command := m.Content
+	if !strings.Contains(command, "!conoha") {
+		return
+	}
 	address := "localhost:8080"
 	// gRPCサーバーとのコネクションを確立する
 	conn, err := grpc.Dial(
@@ -51,14 +70,13 @@ func Minecraft(s *discordgo.Session, m *discordgo.MessageCreate) {
 	client := conohapb.NewConohaServiceClient(conn)
 
 	req := &conohapb.MinecraftRequest{
-		Command: m.Content,
+		Command: command,
 	}
 	res, err := client.Minecraft(context.Background(), req)
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
-	testMessage := "@here gRPCこのはちゃんどりゃあああああああああああああ"
-	s.ChannelMessageSend(m.ChannelID, testMessage)
+
 	fmt.Println(res.GetIsNormal(), res.GetMessage())
 }

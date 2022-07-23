@@ -13,7 +13,9 @@ import (
 	conohapb "grpc-conoha/pkg/grpc"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/grpc/status"
 )
 
 type conohaServer struct {
@@ -24,14 +26,14 @@ type conohaServer struct {
 func (s *conohaServer) Minecraft(ctx context.Context, req *conohapb.MinecraftRequest) (*conohapb.MinecraftResponse, error) {
 	token := conoha.GetToken(config.Config.Username, config.Config.Password, config.Config.TenantId)
 
-	if req.GetCommand() == "!server" {
+	if req.GetCommand() == "!conoha server" {
 		status, _ := conoha.GetServerStatus(token)
 		return &conohapb.MinecraftResponse{
 			Message:  string(status),
 			IsNormal: true,
 		}, nil
 	}
-	if req.GetCommand() == "!start" {
+	if req.GetCommand() == "!conoha start" {
 		status, statusCode := conoha.StartServer(token)
 		is_normal := true
 		if statusCode != 202 {
@@ -42,7 +44,7 @@ func (s *conohaServer) Minecraft(ctx context.Context, req *conohapb.MinecraftReq
 			IsNormal: is_normal,
 		}, nil
 	}
-	if req.GetCommand() == "!stop" {
+	if req.GetCommand() == "!conoha stop" {
 		status, statusCode := conoha.StopServer(token)
 		is_normal := true
 		if statusCode != 202 {
@@ -53,7 +55,7 @@ func (s *conohaServer) Minecraft(ctx context.Context, req *conohapb.MinecraftReq
 			IsNormal: is_normal,
 		}, nil
 	}
-	if req.GetCommand() == "!reboot" {
+	if req.GetCommand() == "!conoha reboot" {
 		status, statusCode := conoha.RebootServer(token)
 		is_normal := true
 		if statusCode != 202 {
@@ -64,7 +66,8 @@ func (s *conohaServer) Minecraft(ctx context.Context, req *conohapb.MinecraftReq
 			IsNormal: is_normal,
 		}, nil
 	}
-	return nil, nil
+	grpcerr := status.Error(codes.Unimplemented, "登録されていないコマンドです")
+	return nil, grpcerr
 }
 
 // 自作サービス構造体のコンストラクタ
