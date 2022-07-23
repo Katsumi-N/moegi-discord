@@ -1,11 +1,12 @@
-
 主にマイクラサーバーの管理をするbotです
 gRPCというプロトコルで通信してます.
 モダンでイイ!!
+
 ★コマンド
 !conoha server -> サーバーの状態を確認するよ
 !conoha start -> サーバーを立ち上げるよ
 !conoha stop -> サーバーをシャットダウンするよ
 !conoha reboot -> サーバーを再起動するよ
+
 ★リポジトリ
 https://github.com/Katsumi-N/grpc-conoha

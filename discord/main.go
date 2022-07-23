@@ -43,6 +43,7 @@ func Introduction(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 	introMessage, err := ioutil.ReadFile("discord/self-intro.txt")
+
 	if err != nil {
 		return
 	}
@@ -74,8 +75,7 @@ func Minecraft(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 	res, err := client.Minecraft(context.Background(), req)
 	if err != nil {
-		log.Fatal(err)
-		return
+		log.Print(err)
 	}
 
 	fmt.Println(res.GetIsNormal(), res.GetMessage())
