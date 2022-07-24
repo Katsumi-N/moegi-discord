@@ -45,40 +45,47 @@ func (s *conohaServer) Minecraft(req *conohapb.MinecraftRequest, stream conohapb
 		return nil
 	}
 	if req.GetCommand() == "!conoha start" {
-		status, statusCode := conoha.StartServer(token)
+		_, statusCode := conoha.StartServer(token, stream)
 		is_normal := true
 		if statusCode != 202 {
 			is_normal = false
 		}
-		return &conohapb.MinecraftResponse{
-			Message:  string(status),
+		if err := stream.Send(&conohapb.MinecraftResponse{
+			Message:  "サーバーを起動しました",
 			IsNormal: is_normal,
-		}, nil
+		}); err != nil {
+			return err
+		}
+		return nil
 	}
 	if req.GetCommand() == "!conoha stop" {
-		status, statusCode := conoha.StopServer(token)
+		_, statusCode := conoha.StopServer(token, stream)
 		is_normal := true
 		if statusCode != 202 {
 			is_normal = false
 		}
-		return &conohapb.MinecraftResponse{
-			Message:  string(status),
+		if err := stream.Send(&conohapb.MinecraftResponse{
+			Message:  "サーバーをシャットダウンしました",
 			IsNormal: is_normal,
-		}, nil
+		}); err != nil {
+			return err
+		}
 	}
 	if req.GetCommand() == "!conoha reboot" {
-		status, statusCode := conoha.RebootServer(token)
+		_, statusCode := conoha.RebootServer(token)
 		is_normal := true
 		if statusCode != 202 {
 			is_normal = false
 		}
-		return &conohapb.MinecraftResponse{
-			Message:  string(status),
+		if err := stream.Send(&conohapb.MinecraftResponse{
+			Message:  "サーバーを再起動しました．",
 			IsNormal: is_normal,
-		}, nil
+		}); err != nil {
+			return err
+		}
 	}
 	grpcerr := status.Error(codes.Unimplemented, "登録されていないコマンドです")
-	return nil, grpcerr
+	return grpcerr
 }
 
 // 自作サービス構造体のコンストラクタ
