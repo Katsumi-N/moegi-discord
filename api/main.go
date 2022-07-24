@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"net"
@@ -22,16 +21,28 @@ type conohaServer struct {
 	conohapb.UnimplementedConohaServiceServer
 }
 
+var statusName = map[string]string{
+	"SHUTOFF":       "シャットダウンしてるよ",
+	"ACTIVE":        "起動してるよ",
+	"RESIZE":        "リサイズ中",
+	"REBOOT":        "再起動中",
+	"VERIFY_RESIZE": "リサイズ承認待ち",
+}
+
 // サービスメソッドのサンプル
-func (s *conohaServer) Minecraft(ctx context.Context, req *conohapb.MinecraftRequest) (*conohapb.MinecraftResponse, error) {
+func (s *conohaServer) Minecraft(req *conohapb.MinecraftRequest, stream conohapb.ConohaService_MinecraftServer) error {
 	token := conoha.GetToken(config.Config.Username, config.Config.Password, config.Config.TenantId)
 
 	if req.GetCommand() == "!conoha server" {
 		status, _ := conoha.GetServerStatus(token)
-		return &conohapb.MinecraftResponse{
-			Message:  string(status),
+
+		if err := stream.Send(&conohapb.MinecraftResponse{
+			Message:  statusName[string(status)],
 			IsNormal: true,
-		}, nil
+		}); err != nil {
+			return err
+		}
+		return nil
 	}
 	if req.GetCommand() == "!conoha start" {
 		status, statusCode := conoha.StartServer(token)
