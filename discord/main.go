@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -73,10 +75,22 @@ func Minecraft(s *discordgo.Session, m *discordgo.MessageCreate) {
 	req := &conohapb.MinecraftRequest{
 		Command: command,
 	}
-	res, err := client.Minecraft(context.Background(), req)
+	stream, err := client.Minecraft(context.Background(), req)
+	if err != nil {
+		return
+	}
+	for {
+		res, err := stream.Recv()
+
+		s.ChannelMessageSend(m.ChannelID, res.GetMessage())
+		if errors.Is(err, io.EOF) {
+			fmt.Println("all the responses have already received.")
+			break
+		}
+	}
+
 	if err != nil {
 		log.Print(err)
 	}
 
-	fmt.Println(res.GetIsNormal(), res.GetMessage())
 }
