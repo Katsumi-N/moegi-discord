@@ -13,6 +13,8 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/health"
+	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
 )
@@ -105,6 +107,10 @@ func main() {
 
 	// gRPCサーバーにserviceを登録
 	conohapb.RegisterConohaServiceServer(s, NewConohaServer())
+
+	healthSrv := health.NewServer()
+	healthpb.RegisterHealthServer(s, healthSrv)
+	healthSrv.SetServingStatus("grpc-conoha", healthpb.HealthCheckResponse_SERVING)
 
 	// grpcURL用にサーバーリフレクションを設定する
 	reflection.Register(s)
