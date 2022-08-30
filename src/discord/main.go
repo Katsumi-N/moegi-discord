@@ -28,6 +28,7 @@ func main() {
 	// dg.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsGuilds | discordgo.IntentsGuildMessages)
 	dg.AddHandler(Minecraft)
 	dg.AddHandler(Introduction)
+
 	err = dg.Open()
 	if err != nil {
 		log.Println("error opening connection,", err)
@@ -44,9 +45,11 @@ func Introduction(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if command != "!intro" {
 		return
 	}
-	introMessage, err := ioutil.ReadFile("discord/self-intro.txt")
+	s.ChannelMessageSend(m.ChannelID, "自己紹介します！")
+	introMessage, err := ioutil.ReadFile("self-intro.txt")
 
 	if err != nil {
+		log.Println("can't read self-intro.txt")
 		return
 	}
 	s.ChannelMessageSend(m.ChannelID, string(introMessage))
@@ -57,7 +60,7 @@ func Minecraft(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if !strings.Contains(command, "!conoha") {
 		return
 	}
-	address := "localhost:8080"
+	address := "server:8080"
 	// gRPCサーバーとのコネクションを確立する
 	conn, err := grpc.Dial(
 		address,

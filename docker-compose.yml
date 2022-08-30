@@ -1,0 +1,16 @@
+version: '3'
+services:
+  server:
+    image: grpc-conoha-server:latest
+    networks:
+      - conoha-networks
+    restart: always
+    ports:
+      - 8080:8080
+  client:
+    image: grpc-conoha-client:latest
+    networks:
+      - conoha-networks
+    restart: always
+networks:
+  conoha-networks:
