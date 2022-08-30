@@ -38,7 +38,7 @@ func init() {
 		DiscordToken:   cfg.Section("discord").Key("token").String(),
 	}
 
-	// deploying for heroku
+	// deploy to EC2
 
 	// Config = ConfigList{
 	// 	TenantId:       os.Getenv("conohatenantId"),
