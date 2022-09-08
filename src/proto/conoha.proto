@@ -4,6 +4,7 @@ option go_package = "pkg/grpc";
 
 service ConohaService {
     rpc Minecraft (MinecraftRequest) returns (stream MinecraftResponse);
+    rpc Vote (VoteRequest) returns (VoteResponse);
 }
 
 message MinecraftRequest {
@@ -15,4 +16,14 @@ message MinecraftResponse {
     string message = 1;
     bool is_normal = 2;
 
+}
+
+message VoteRequest {
+    string command = 1;
+    string title = 2;
+    repeated string options = 3;
+}
+
+message VoteResponse {
+    string message = 1;
 }

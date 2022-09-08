@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net"
 	"os"
 	"os/signal"
+	"strconv"
 
 	"grpc-conoha/api/conoha"
 	"grpc-conoha/config"
@@ -13,8 +15,6 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/health"
-	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
 )
@@ -31,7 +31,7 @@ var statusName = map[string]string{
 	"VERIFY_RESIZE": "リサイズ承認待ち",
 }
 
-// サービスメソッドのサンプル
+// マインクラフト用のConoha VPSサーバーを起動/シャッタダウン/再起動する
 func (s *conohaServer) Minecraft(req *conohapb.MinecraftRequest, stream conohapb.ConohaService_MinecraftServer) error {
 	token := conoha.GetToken(config.Config.Username, config.Config.Password, config.Config.TenantId)
 
@@ -90,6 +90,15 @@ func (s *conohaServer) Minecraft(req *conohapb.MinecraftRequest, stream conohapb
 	return grpcerr
 }
 
+func (s *conohaServer) Vote(ctx context.Context, req *conohapb.VoteRequest) (*conohapb.VoteResponse, error) {
+	// いいかんじに投票メッセージを作る
+	// Optionsの個数分投票しておく
+	retMes := "投票タイトル！: " + req.GetTitle() + "選択肢の個数: " + strconv.Itoa(len(req.GetOptions()))
+	return &conohapb.VoteResponse{
+		Message: retMes,
+	}, nil
+}
+
 // 自作サービス構造体のコンストラクタ
 func NewConohaServer() *conohaServer {
 	return &conohaServer{}
@@ -107,10 +116,6 @@ func main() {
 
 	// gRPCサーバーにserviceを登録
 	conohapb.RegisterConohaServiceServer(s, NewConohaServer())
-
-	healthSrv := health.NewServer()
-	healthpb.RegisterHealthServer(s, healthSrv)
-	healthSrv.SetServingStatus("grpc-conoha", healthpb.HealthCheckResponse_SERVING)
 
 	// grpcURL用にサーバーリフレクションを設定する
 	reflection.Register(s)

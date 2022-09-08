@@ -19,6 +19,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ConohaServiceClient interface {
 	Minecraft(ctx context.Context, in *MinecraftRequest, opts ...grpc.CallOption) (ConohaService_MinecraftClient, error)
+	Vote(ctx context.Context, in *VoteRequest, opts ...grpc.CallOption) (*VoteResponse, error)
 }
 
 type conohaServiceClient struct {
@@ -61,11 +62,21 @@ func (x *conohaServiceMinecraftClient) Recv() (*MinecraftResponse, error) {
 	return m, nil
 }
 
+func (c *conohaServiceClient) Vote(ctx context.Context, in *VoteRequest, opts ...grpc.CallOption) (*VoteResponse, error) {
+	out := new(VoteResponse)
+	err := c.cc.Invoke(ctx, "/ConohaService/Vote", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ConohaServiceServer is the server API for ConohaService service.
 // All implementations must embed UnimplementedConohaServiceServer
 // for forward compatibility
 type ConohaServiceServer interface {
 	Minecraft(*MinecraftRequest, ConohaService_MinecraftServer) error
+	Vote(context.Context, *VoteRequest) (*VoteResponse, error)
 	mustEmbedUnimplementedConohaServiceServer()
 }
 
@@ -75,6 +86,9 @@ type UnimplementedConohaServiceServer struct {
 
 func (UnimplementedConohaServiceServer) Minecraft(*MinecraftRequest, ConohaService_MinecraftServer) error {
 	return status.Errorf(codes.Unimplemented, "method Minecraft not implemented")
+}
+func (UnimplementedConohaServiceServer) Vote(context.Context, *VoteRequest) (*VoteResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Vote not implemented")
 }
 func (UnimplementedConohaServiceServer) mustEmbedUnimplementedConohaServiceServer() {}
 
@@ -110,13 +124,36 @@ func (x *conohaServiceMinecraftServer) Send(m *MinecraftResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
+func _ConohaService_Vote_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VoteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConohaServiceServer).Vote(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ConohaService/Vote",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConohaServiceServer).Vote(ctx, req.(*VoteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ConohaService_ServiceDesc is the grpc.ServiceDesc for ConohaService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var ConohaService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "ConohaService",
 	HandlerType: (*ConohaServiceServer)(nil),
-	Methods:     []grpc.MethodDesc{},
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Vote",
+			Handler:    _ConohaService_Vote_Handler,
+		},
+	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "Minecraft",
@@ -124,5 +161,5 @@ var ConohaService_ServiceDesc = grpc.ServiceDesc{
 			ServerStreams: true,
 		},
 	},
-	Metadata: "proto/conoha.proto",
+	Metadata: "conoha.proto",
 }
