@@ -11,6 +11,7 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	"grpc-conoha/config"
 	conohapb "grpc-conoha/pkg/grpc"
@@ -106,41 +107,55 @@ func Minecraft(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
-// コマンド例 !vote 旅行先 北海道 東京 沖縄
+// コマンド例 !vote 旅行先 北海道 東京 沖縄 --Crirona
 func Vote(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if !strings.Contains(m.Content, "!vote") {
 		return
 	}
-	conn, err := makeGrpcConnection("8080")
+
+	voteArr := strings.Split(m.Content, " ")
+	isCrirona := false
+	// --time引数を検知したい
+	for i, v := range voteArr {
+		if v == "--crirona" {
+			isCrirona = true
+			voteArr = voteArr[:i]
+			break
+		}
+	}
+
+	if len(voteArr) <= 2 {
+		s.ChannelMessageSend(m.ChannelID, "選択肢を入力してね！")
+	}
+	if len(voteArr) >= 10 {
+		s.ChannelMessageSend(m.ChannelID, "選択肢は7個以下でお願いします！")
+	}
+	voteOptions := voteArr[2:]
+
+	voteMsg := m.Message.Author.Username + "が作った投票だよ！\n"
+
+	voteEmoji := []string{Eone, Etwo, Ethree, Efour, Efive, Esix, Eseven}
+	for i, v := range voteOptions {
+		voteMsg += voteEmoji[i] + v + "\n"
+	}
+
+	sendMsg := &discordgo.MessageEmbed{
+		Title:       voteArr[1],
+		Description: voteMsg,
+		Color:       1752220,
+	}
+	msg, err := s.ChannelMessageSendEmbed(m.ChannelID, sendMsg)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer conn.Close()
-	voteArr := strings.Split(m.Content, " ")
-	voteTitle := voteArr[1]
-	if len(voteArr) <= 2 {
-		log.Fatal("input vote options")
-	}
-	if len(voteArr) >= 12 {
-		log.Fatal("vote options must be less than 10")
-	}
-	voteArr = voteArr[2:]
-	client := conohapb.NewConohaServiceClient(conn)
-
-	req := &conohapb.VoteRequest{
-		Command: m.Content,
-		Title:   voteTitle,
-		Options: voteArr,
-	}
-	res, err := client.Vote(context.Background(), req)
-	if err != nil {
-		return
+	for i := range voteOptions {
+		s.MessageReactionAdd(m.ChannelID, msg.ID, voteEmoji[i])
 	}
 
-	s.ChannelMessageSend(m.ChannelID, res.GetMessage())
-
-	if err != nil {
-		log.Print(err)
+	if isCrirona {
+		time.AfterFunc(3*time.Minute, func() {
+			// TODO: sendMsgにリアクションをしていない人にメンションする
+			s.ChannelMessageSend(m.ChannelID, "なぜ回答しないんだい？みんなは回答しているよ")
+		})
 	}
-
 }

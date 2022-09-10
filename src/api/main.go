@@ -1,13 +1,11 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"net"
 	"os"
 	"os/signal"
-	"strconv"
 
 	"grpc-conoha/api/conoha"
 	"grpc-conoha/config"
@@ -88,15 +86,6 @@ func (s *conohaServer) Minecraft(req *conohapb.MinecraftRequest, stream conohapb
 	}
 	grpcerr := status.Error(codes.Unimplemented, "登録されていないコマンドです")
 	return grpcerr
-}
-
-func (s *conohaServer) Vote(ctx context.Context, req *conohapb.VoteRequest) (*conohapb.VoteResponse, error) {
-	// いいかんじに投票メッセージを作る
-	// Optionsの個数分投票しておく
-	retMes := "投票タイトル！: " + req.GetTitle() + "選択肢の個数: " + strconv.Itoa(len(req.GetOptions()))
-	return &conohapb.VoteResponse{
-		Message: retMes,
-	}, nil
 }
 
 // 自作サービス構造体のコンストラクタ
