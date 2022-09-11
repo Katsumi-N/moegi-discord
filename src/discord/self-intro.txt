@@ -7,6 +7,7 @@ ec2インスタンス上で動いてるよ
 !conoha start -> サーバーを立ち上げるよ
 !conoha stop -> サーバーをシャットダウンするよ
 !conoha reboot -> サーバーを再起動するよ
+!vote (タイトル) (選択肢1) (選択肢2) ... -> 投票を作成するよ(隠しコマンドでリマインドしにいくよ)
 
 ★リポジトリ
 https://github.com/Katsumi-N/grpc-conoha

@@ -26,7 +26,8 @@ func main() {
 	discordToken := config.Config.DiscordToken
 	dg, err := discordgo.New("Bot " + discordToken)
 	defer dg.Close()
-	// dg.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsGuilds | discordgo.IntentsGuildMessages)
+	// dg.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsGuilds | discordgo.IntentsGuildMessages | discordgo.IntentsGuildMembers)
+	dg.Identify.Intents = discordgo.IntentsAll
 	dg.AddHandler(Minecraft)
 	dg.AddHandler(Introduction)
 	dg.AddHandler(Vote)
@@ -153,8 +154,34 @@ func Vote(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	if isCrirona {
-		time.AfterFunc(3*time.Minute, func() {
-			// TODO: sendMsgにリアクションをしていない人にメンションする
+		time.AfterFunc(5*time.Minute, func() {
+			g, err := s.State.Guild(config.Config.DiscordGuildId)
+
+			if err != nil {
+				log.Fatal(err)
+			}
+			responed := make(map[string]bool, len(g.Members))
+			for _, mem := range g.Members {
+				responed[mem.User.ID] = false
+			}
+
+			// sendMsgにリアクションをしていない人にメンションする
+			for i := range voteOptions {
+				reacters, err := s.MessageReactions(m.ChannelID, msg.ID, voteEmoji[i], 100, "", "")
+				if err != nil {
+					log.Fatal(err)
+				}
+				for _, u := range reacters {
+					responed[u.ID] = true
+				}
+			}
+			msg := ""
+			for k, v := range responed {
+				if !v {
+					msg += "<@" + k + "> "
+				}
+			}
+			s.ChannelMessageSend(m.ChannelID, msg)
 			s.ChannelMessageSend(m.ChannelID, "なぜ回答しないんだい？みんなは回答しているよ")
 		})
 	}
