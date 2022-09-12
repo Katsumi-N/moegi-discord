@@ -1,5 +1,9 @@
 # build用のコンテナ
 FROM golang:1.18-alpine AS build
+RUN apk add tzdata && \
+    cp /usr/share/zoneinfo/Asia/Tokyo /etc/localtime && \
+    echo "Asia/Tokyo" > /etc/timezone && \
+    apk del tzdata
 
 ENV ROOT=/go/src/project
 WORKDIR ${ROOT}
@@ -11,7 +15,10 @@ RUN go mod download \
 
 # server用のコンテナ
 FROM alpine:3.15.4
-
+RUN apk add tzdata && \
+    cp /usr/share/zoneinfo/Asia/Tokyo /etc/localtime && \
+    echo "Asia/Tokyo" > /etc/timezone && \
+    apk del tzdata
 ENV ROOT=/go/src/project
 WORKDIR ${ROOT}
 

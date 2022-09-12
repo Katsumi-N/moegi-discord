@@ -31,13 +31,6 @@ type TokenInfo struct {
 	Expires  string `json:"expires"`
 }
 
-func getJSTTime() time.Time {
-	jst, err := time.LoadLocation("Asia/Tokyo")
-	if err != nil {
-		log.Fatal(err)
-	}
-	return time.Now().In(jst)
-}
 func doRequest(method, base string, urlPath string, tokenId string, data string, query map[string]string) (body []byte, statuscode int, err error) {
 	client := &http.Client{}
 	baseURL, err := url.Parse(base)
@@ -111,7 +104,7 @@ func StartServer(token string, stream conohapb.ConohaService_MinecraftServer) (r
 		}
 		// statusが"VERIFY_RESIZE"になってからconfirmする
 		// 約6分かかる
-		t := getJSTTime()
+		t := time.Now()
 		t_expect := t.Add(time.Duration(8) * time.Minute)
 		if err := stream.Send(&conohapb.MinecraftResponse{
 			Message:  fmt.Sprintf("リサイズ処理がスタートしました．予定時刻 %d:%d", t_expect.Hour(), t_expect.Minute()),
@@ -134,7 +127,7 @@ func StartServer(token string, stream conohapb.ConohaService_MinecraftServer) (r
 		}
 
 		// VERIFY_RESIZE->SHUTOFF まで約90秒
-		t = getJSTTime()
+		t = time.Now()
 		t_expect = t.Add(time.Duration(2) * time.Minute)
 		if err := stream.Send(&conohapb.MinecraftResponse{
 			Message:  "リサイズ処理が終了しました．起動処理を開始します．",
@@ -170,7 +163,7 @@ func StartServer(token string, stream conohapb.ConohaService_MinecraftServer) (r
 func StopServer(token string, stream conohapb.ConohaService_MinecraftServer) (resBody []byte, statusCode int) {
 	status, flavorId := GetServerStatus(token)
 	if status == "ACTIVE" {
-		t := getJSTTime()
+		t := time.Now()
 		t_expect := t.Add(time.Duration(8) * time.Minute)
 		if err := stream.Send(&conohapb.MinecraftResponse{
 			Message:  fmt.Sprintf("シャットダウンを開始します．予定時刻 %d:%d", t_expect.Hour(), t_expect.Minute()),

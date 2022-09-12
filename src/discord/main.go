@@ -116,7 +116,6 @@ func Vote(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	voteArr := strings.Split(m.Content, " ")
 	isCrirona := false
-	// --time引数を検知したい
 	for i, v := range voteArr {
 		if v == "--crirona" {
 			isCrirona = true
