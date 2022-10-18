@@ -1,14 +1,18 @@
 version: '3'
 services:
   server:
-    image: grpc-conoha-server:latest
+    build:
+      context: .
+      dockerfile: ./src/api/Dockerfile
     networks:
       - conoha-networks
     restart: always
     ports:
       - 8080:8080
   client:
-    image: grpc-conoha-client:latest
+    build:
+      context: .
+      dockerfile: ./src/discord/Dockerfile
     networks:
       - conoha-networks
     restart: always
