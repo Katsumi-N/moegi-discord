@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"grpc-conoha/config"
+	"grpc-conoha/discord/widgets"
 	conohapb "grpc-conoha/pkg/grpc"
 
 	"github.com/bwmarrin/discordgo"
@@ -31,6 +32,8 @@ func main() {
 	dg.AddHandler(Minecraft)
 	dg.AddHandler(Introduction)
 	dg.AddHandler(Vote)
+	dg.AddHandler(Widget)
+	fmt.Println("hoge")
 
 	err = dg.Open()
 	if err != nil {
@@ -184,4 +187,27 @@ func Vote(s *discordgo.Session, m *discordgo.MessageCreate) {
 			s.ChannelMessageSend(m.ChannelID, "なぜ回答しないんだい？みんなは回答しているよ")
 		})
 	}
+}
+
+func Widget(s *discordgo.Session, m *discordgo.MessageCreate) {
+	if !strings.Contains(m.Content, "!widget") {
+		return
+	}
+	fmt.Println("widget start")
+	p := widgets.NewPaginator(s, m.ChannelID)
+
+	p.Add(&discordgo.MessageEmbed{Description: "Page one"},
+		&discordgo.MessageEmbed{Description: "Page two"},
+		&discordgo.MessageEmbed{Description: "Page three"})
+
+	p.SetPageFooters()
+
+	p.ColorWhenDone = 0xffff
+
+	p.Widget.Handle("🔫", func(w *widgets.Widget, r *discordgo.MessageReaction) {
+		s.ChannelMessageSend(m.ChannelID, "Bang!")
+	})
+
+	p.Spawn()
+
 }
