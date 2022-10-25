@@ -32,7 +32,7 @@ func main() {
 	dg.AddHandler(Minecraft)
 	dg.AddHandler(Introduction)
 	dg.AddHandler(Vote)
-	dg.AddHandler(Widget)
+	// dg.AddHandler(Widget)
 	fmt.Println("hoge")
 
 	err = dg.Open()
