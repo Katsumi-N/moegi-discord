@@ -17,6 +17,7 @@ type ConfigList struct {
 	Flavor1gb      string
 	Flavor4gb      string
 	DiscordGuildId string
+	MoegiEndpoint  string
 }
 
 var Config ConfigList
@@ -38,6 +39,7 @@ func init() {
 		Flavor4gb:      cfg.Section("conoha").Key("flavor_4gb").String(),
 		DiscordToken:   cfg.Section("discord").Key("token").String(),
 		DiscordGuildId: cfg.Section("discord").Key("guildid").String(),
+		MoegiEndpoint:  cfg.Section("lambda").Key("moegi_endpoint").String(),
 	}
 
 	// deploy to EC2
