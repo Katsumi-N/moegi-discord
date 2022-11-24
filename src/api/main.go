@@ -1,4 +1,4 @@
-package main
+package conoha
 
 import (
 	"fmt"
@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/signal"
 
-	"grpc-conoha/api/conoha"
 	"grpc-conoha/config"
 	conohapb "grpc-conoha/pkg/grpc"
 
@@ -31,55 +30,55 @@ var statusName = map[string]string{
 
 // マインクラフト用のConoha VPSサーバーを起動/シャッタダウン/再起動する
 func (s *conohaServer) Minecraft(req *conohapb.MinecraftRequest, stream conohapb.ConohaService_MinecraftServer) error {
-	token := conoha.GetToken(config.Config.Username, config.Config.Password, config.Config.TenantId)
+	token := GetToken(config.Config.Username, config.Config.Password, config.Config.TenantId)
 
 	if req.GetCommand() == "!conoha server" {
-		status, _ := conoha.GetServerStatus(token)
+		status, _ := GetServerStatus(token)
 
 		if err := stream.Send(&conohapb.MinecraftResponse{
-			Message:  statusName[string(status)],
-			IsNormal: true,
+			Message: statusName[string(status)],
+			Health:  true,
 		}); err != nil {
 			return err
 		}
 		return nil
 	}
 	if req.GetCommand() == "!conoha start" {
-		_, statusCode := conoha.StartServer(token, stream)
+		_, statusCode := StartServer(token, stream)
 		is_normal := true
 		if statusCode != 202 {
 			is_normal = false
 		}
 		if err := stream.Send(&conohapb.MinecraftResponse{
-			Message:  "サーバーを起動しました",
-			IsNormal: is_normal,
+			Message: "サーバーを起動しました",
+			Health:  is_normal,
 		}); err != nil {
 			return err
 		}
 		return nil
 	}
 	if req.GetCommand() == "!conoha stop" {
-		_, statusCode := conoha.StopServer(token, stream)
+		_, statusCode := StopServer(token, stream)
 		is_normal := true
 		if statusCode != 202 {
 			is_normal = false
 		}
 		if err := stream.Send(&conohapb.MinecraftResponse{
-			Message:  "サーバーをシャットダウンしました",
-			IsNormal: is_normal,
+			Message: "サーバーをシャットダウンしました",
+			Health:  is_normal,
 		}); err != nil {
 			return err
 		}
 	}
 	if req.GetCommand() == "!conoha reboot" {
-		_, statusCode := conoha.RebootServer(token)
+		_, statusCode := RebootServer(token)
 		is_normal := true
 		if statusCode != 202 {
 			is_normal = false
 		}
 		if err := stream.Send(&conohapb.MinecraftResponse{
-			Message:  "サーバーを再起動しました．",
-			IsNormal: is_normal,
+			Message: "サーバーを再起動しました．",
+			Health:  is_normal,
 		}); err != nil {
 			return err
 		}

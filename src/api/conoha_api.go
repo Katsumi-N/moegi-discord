@@ -1,15 +1,11 @@
 package conoha
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"grpc-conoha/config"
 	conohapb "grpc-conoha/pkg/grpc"
-	"io/ioutil"
 	"log"
-	"net/http"
-	"net/url"
 	"time"
 )
 
@@ -31,57 +27,57 @@ type TokenInfo struct {
 	Expires  string `json:"expires"`
 }
 
-func doRequest(method, base string, urlPath string, tokenId string, data string, query map[string]string) (body []byte, statuscode int, err error) {
-	client := &http.Client{}
-	baseURL, err := url.Parse(base)
-	if err != nil {
-		return
-	}
-	apiURL, err := url.Parse(urlPath)
-	if err != nil {
-		return
-	}
-	// 相対パス→絶対パス
-	endpoint := baseURL.ResolveReference(apiURL).String()
-	// log.Printf("action=doRequest endpoint=%s", endpoint)
-	//リクエストの作成
-	req, err := http.NewRequest(method, endpoint, bytes.NewBufferString(data))
-	if err != nil {
-		return
-	}
-	req.Header.Add("Accept", "application/json")
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	if tokenId != "" {
-		req.Header.Add("X-Auth-Token", tokenId)
-	}
-	// 渡されたクエリをAdd
-	q := req.URL.Query()
-	for key, value := range query {
-		q.Add(key, value)
-	}
-	// クエリはエンコードが必要
-	req.URL.RawQuery = q.Encode()
+// func doRequest(method, base string, urlPath string, tokenId string, data string, query map[string]string) (body []byte, statuscode int, err error) {
+// 	client := &http.Client{}
+// 	baseURL, err := url.Parse(base)
+// 	if err != nil {
+// 		return
+// 	}
+// 	apiURL, err := url.Parse(urlPath)
+// 	if err != nil {
+// 		return
+// 	}
+// 	// 相対パス→絶対パス
+// 	endpoint := baseURL.ResolveReference(apiURL).String()
+// 	// log.Printf("action=doRequest endpoint=%s", endpoint)
+// 	//リクエストの作成
+// 	req, err := http.NewRequest(method, endpoint, bytes.NewBufferString(data))
+// 	if err != nil {
+// 		return
+// 	}
+// 	req.Header.Add("Accept", "application/json")
+// 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+// 	if tokenId != "" {
+// 		req.Header.Add("X-Auth-Token", tokenId)
+// 	}
+// 	// 渡されたクエリをAdd
+// 	q := req.URL.Query()
+// 	for key, value := range query {
+// 		q.Add(key, value)
+// 	}
+// 	// クエリはエンコードが必要
+// 	req.URL.RawQuery = q.Encode()
 
-	// 実行
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, resp.StatusCode, err
-	}
-	defer resp.Body.Close()
-	// 帰ってきた値のbodyを読み込む
-	body, err = ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, resp.StatusCode, err
-	}
+// 	// 実行
+// 	resp, err := client.Do(req)
+// 	if err != nil {
+// 		return nil, resp.StatusCode, err
+// 	}
+// 	defer resp.Body.Close()
+// 	// 帰ってきた値のbodyを読み込む
+// 	body, err = ioutil.ReadAll(resp.Body)
+// 	if err != nil {
+// 		return nil, resp.StatusCode, err
+// 	}
 
-	return body, resp.StatusCode, nil
-}
+// 	return body, resp.StatusCode, nil
+// }
 
 // トークンの取得
 func GetToken(userName string, password string, tenantId string) string {
 	body := fmt.Sprintf("{\"auth\":{\"passwordCredentials\":{\"username\":\"%s\",\"password\":\"%s\"},\"tenantId\":\"%s\"}}",
 		userName, password, tenantId)
-	resp, _, err := doRequest("POST", identityURL, "tokens", "", body, map[string]string{})
+	resp, _, err := DoRequest("POST", identityURL, "tokens", "", body, map[string]string{})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -107,8 +103,8 @@ func StartServer(token string, stream conohapb.ConohaService_MinecraftServer) (r
 		t := time.Now()
 		t_expect := t.Add(time.Duration(8) * time.Minute)
 		if err := stream.Send(&conohapb.MinecraftResponse{
-			Message:  fmt.Sprintf("リサイズ処理がスタートしました．予定時刻 %d:%d", t_expect.Hour(), t_expect.Minute()),
-			IsNormal: true,
+			Message: fmt.Sprintf("リサイズ処理がスタートしました．予定時刻 %d:%d", t_expect.Hour(), t_expect.Minute()),
+			Health:  true,
 		}); err != nil {
 			return nil, 503
 		}
@@ -130,8 +126,8 @@ func StartServer(token string, stream conohapb.ConohaService_MinecraftServer) (r
 		t = time.Now()
 		t_expect = t.Add(time.Duration(2) * time.Minute)
 		if err := stream.Send(&conohapb.MinecraftResponse{
-			Message:  "リサイズ処理が終了しました．起動処理を開始します．",
-			IsNormal: true,
+			Message: "リサイズ処理が終了しました．起動処理を開始します．",
+			Health:  true,
 		}); err != nil {
 			return nil, 503
 		}
@@ -153,7 +149,7 @@ func StartServer(token string, stream conohapb.ConohaService_MinecraftServer) (r
 
 	url := config.Config.TenantId + "/servers/" + config.Config.ServerId + "/action"
 	body := fmt.Sprintf("{\"os-start\":\"null\"}")
-	resBody, statusCode, err := doRequest("POST", computeURL, url, token, body, map[string]string{})
+	resBody, statusCode, err := DoRequest("POST", computeURL, url, token, body, map[string]string{})
 	if err != nil {
 		log.Print(err)
 	}
@@ -166,15 +162,15 @@ func StopServer(token string, stream conohapb.ConohaService_MinecraftServer) (re
 		t := time.Now()
 		t_expect := t.Add(time.Duration(8) * time.Minute)
 		if err := stream.Send(&conohapb.MinecraftResponse{
-			Message:  fmt.Sprintf("シャットダウンを開始します．予定時刻 %d:%d", t_expect.Hour(), t_expect.Minute()),
-			IsNormal: true,
+			Message: fmt.Sprintf("シャットダウンを開始します．予定時刻 %d:%d", t_expect.Hour(), t_expect.Minute()),
+			Health:  true,
 		}); err != nil {
 			return nil, 503
 		}
 
 		url := config.Config.TenantId + "/servers/" + config.Config.ServerId + "/action"
 		body := fmt.Sprintf("{\"os-stop\":\"null\"}")
-		_, _, err := doRequest("POST", computeURL, url, token, body, map[string]string{})
+		_, _, err := DoRequest("POST", computeURL, url, token, body, map[string]string{})
 		if err != nil {
 			log.Print(err)
 		}
@@ -189,8 +185,8 @@ func StopServer(token string, stream conohapb.ConohaService_MinecraftServer) (re
 
 	// メモリを1gbに変更
 	if err := stream.Send(&conohapb.MinecraftResponse{
-		Message:  "リサイズ処理がスタートしました.",
-		IsNormal: true,
+		Message: "リサイズ処理がスタートしました.",
+		Health:  true,
 	}); err != nil {
 		return nil, 503
 	}
@@ -238,7 +234,7 @@ func StopServer(token string, stream conohapb.ConohaService_MinecraftServer) (re
 func RebootServer(token string) (resBody []byte, status int) {
 	url := config.Config.TenantId + "/servers/" + config.Config.ServerId + "/action"
 	body := fmt.Sprintf("{\"reboot\":{\"type\":\"SOFT\"}}")
-	resBody, status, err := doRequest("POST", computeURL, url, token, body, map[string]string{})
+	resBody, status, err := DoRequest("POST", computeURL, url, token, body, map[string]string{})
 	if err != nil {
 		log.Print(err)
 	}
@@ -258,7 +254,7 @@ type ServerInfo struct {
 // サーバーの状態を取得
 func GetServerStatus(token string) (status string, flavorId string) {
 	url := config.Config.TenantId + "/servers/" + config.Config.ServerId
-	resp, _, err := doRequest("GET", computeURL, url, token, "", map[string]string{})
+	resp, _, err := DoRequest("GET", computeURL, url, token, "", map[string]string{})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -277,7 +273,7 @@ func ChangeServerFlavor(token string, now string, to string) (resBody []byte, st
 		changeFlavor = config.Config.Flavor1gb
 	}
 	data := fmt.Sprintf("{\"resize\": {\"flavorRef\": \"%s\"}}", changeFlavor)
-	resBody, status, err := doRequest("POST", computeURL, url, token, data, map[string]string{})
+	resBody, status, err := DoRequest("POST", computeURL, url, token, data, map[string]string{})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -287,7 +283,7 @@ func ChangeServerFlavor(token string, now string, to string) (resBody []byte, st
 func ConfirmResize(token string) (resBody []byte, status int) {
 	url := config.Config.TenantId + "/servers/" + config.Config.ServerId + "/action"
 	data := fmt.Sprintf("{\"confirmResize\": null}")
-	resBody, status, err := doRequest("POST", computeURL, url, token, data, map[string]string{})
+	resBody, status, err := DoRequest("POST", computeURL, url, token, data, map[string]string{})
 	if err != nil {
 		log.Print(err)
 	}

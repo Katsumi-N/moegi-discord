@@ -19,7 +19,8 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ConohaServiceClient interface {
 	Minecraft(ctx context.Context, in *MinecraftRequest, opts ...grpc.CallOption) (ConohaService_MinecraftClient, error)
-	Vote(ctx context.Context, in *VoteRequest, opts ...grpc.CallOption) (*VoteResponse, error)
+	SpellGet(ctx context.Context, in *SpellGetRequest, opts ...grpc.CallOption) (*SpellGetResponse, error)
+	SpellPost(ctx context.Context, in *SpellPostRequest, opts ...grpc.CallOption) (*SpellPostResponse, error)
 }
 
 type conohaServiceClient struct {
@@ -62,9 +63,18 @@ func (x *conohaServiceMinecraftClient) Recv() (*MinecraftResponse, error) {
 	return m, nil
 }
 
-func (c *conohaServiceClient) Vote(ctx context.Context, in *VoteRequest, opts ...grpc.CallOption) (*VoteResponse, error) {
-	out := new(VoteResponse)
-	err := c.cc.Invoke(ctx, "/ConohaService/Vote", in, out, opts...)
+func (c *conohaServiceClient) SpellGet(ctx context.Context, in *SpellGetRequest, opts ...grpc.CallOption) (*SpellGetResponse, error) {
+	out := new(SpellGetResponse)
+	err := c.cc.Invoke(ctx, "/ConohaService/SpellGet", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *conohaServiceClient) SpellPost(ctx context.Context, in *SpellPostRequest, opts ...grpc.CallOption) (*SpellPostResponse, error) {
+	out := new(SpellPostResponse)
+	err := c.cc.Invoke(ctx, "/ConohaService/SpellPost", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +86,8 @@ func (c *conohaServiceClient) Vote(ctx context.Context, in *VoteRequest, opts ..
 // for forward compatibility
 type ConohaServiceServer interface {
 	Minecraft(*MinecraftRequest, ConohaService_MinecraftServer) error
-	Vote(context.Context, *VoteRequest) (*VoteResponse, error)
+	SpellGet(context.Context, *SpellGetRequest) (*SpellGetResponse, error)
+	SpellPost(context.Context, *SpellPostRequest) (*SpellPostResponse, error)
 	mustEmbedUnimplementedConohaServiceServer()
 }
 
@@ -87,8 +98,11 @@ type UnimplementedConohaServiceServer struct {
 func (UnimplementedConohaServiceServer) Minecraft(*MinecraftRequest, ConohaService_MinecraftServer) error {
 	return status.Errorf(codes.Unimplemented, "method Minecraft not implemented")
 }
-func (UnimplementedConohaServiceServer) Vote(context.Context, *VoteRequest) (*VoteResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Vote not implemented")
+func (UnimplementedConohaServiceServer) SpellGet(context.Context, *SpellGetRequest) (*SpellGetResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SpellGet not implemented")
+}
+func (UnimplementedConohaServiceServer) SpellPost(context.Context, *SpellPostRequest) (*SpellPostResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SpellPost not implemented")
 }
 func (UnimplementedConohaServiceServer) mustEmbedUnimplementedConohaServiceServer() {}
 
@@ -124,20 +138,38 @@ func (x *conohaServiceMinecraftServer) Send(m *MinecraftResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _ConohaService_Vote_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(VoteRequest)
+func _ConohaService_SpellGet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SpellGetRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ConohaServiceServer).Vote(ctx, in)
+		return srv.(ConohaServiceServer).SpellGet(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ConohaService/Vote",
+		FullMethod: "/ConohaService/SpellGet",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConohaServiceServer).Vote(ctx, req.(*VoteRequest))
+		return srv.(ConohaServiceServer).SpellGet(ctx, req.(*SpellGetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ConohaService_SpellPost_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SpellPostRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConohaServiceServer).SpellPost(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ConohaService/SpellPost",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConohaServiceServer).SpellPost(ctx, req.(*SpellPostRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -150,8 +182,12 @@ var ConohaService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*ConohaServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Vote",
-			Handler:    _ConohaService_Vote_Handler,
+			MethodName: "SpellGet",
+			Handler:    _ConohaService_SpellGet_Handler,
+		},
+		{
+			MethodName: "SpellPost",
+			Handler:    _ConohaService_SpellPost_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
