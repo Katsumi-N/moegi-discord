@@ -33,7 +33,6 @@ func main() {
 	dg.AddHandler(Introduction)
 	dg.AddHandler(Vote)
 	dg.AddHandler(Widget)
-	fmt.Println("hoge")
 
 	err = dg.Open()
 	if err != nil {
