@@ -1,4 +1,4 @@
-package conoha
+package main
 
 import (
 	"encoding/json"
