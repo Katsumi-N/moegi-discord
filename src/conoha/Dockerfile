@@ -9,7 +9,7 @@ ENV ROOT=/go/src/project
 WORKDIR ${ROOT}
 COPY ./src ${ROOT}
 RUN go mod download \
-	&& CGO_ENABLED=0 GOOS=linux go build -o server ./api
+	&& CGO_ENABLED=0 GOOS=linux go build -o server ./conoha
 
 # server用のコンテナ
 FROM alpine:3.15.4

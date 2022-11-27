@@ -3,7 +3,7 @@ services:
   server:
     build:
       context: .
-      dockerfile: ./src/api/Dockerfile
+      dockerfile: ./src/conoha/Dockerfile
     networks:
       - conoha-networks
     restart: always
@@ -16,5 +16,8 @@ services:
     networks:
       - conoha-networks
     restart: always
+    # volumes:
+    #   - ./:/go/src
 networks:
   conoha-networks:
+
