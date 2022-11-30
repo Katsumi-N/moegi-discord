@@ -16,8 +16,7 @@ services:
     networks:
       - conoha-networks
     restart: always
-    # volumes:
-    #   - ./:/go/src
+
 networks:
   conoha-networks:
 

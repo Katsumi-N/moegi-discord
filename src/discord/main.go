@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"grpc-conoha/config"
-	"grpc-conoha/discord/novelai"
 	"grpc-conoha/discord/widgets"
 	conohapb "grpc-conoha/pkg/grpc"
 
@@ -34,7 +33,6 @@ func main() {
 	dg.AddHandler(Introduction)
 	dg.AddHandler(Vote)
 	dg.AddHandler(Widget)
-	dg.AddHandler(NovelAI)
 	err = dg.Open()
 	if err != nil {
 		log.Println("error opening connection,", err)
@@ -210,13 +208,4 @@ func Widget(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	p.Spawn()
 
-}
-
-func NovelAI(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if !strings.Contains(m.Content, "!novelai") {
-		return
-	}
-	spellArr := strings.Split(m.Content, " ")
-	spell := strings.Join(spellArr[1:], " ")
-	novelai.ExecuteNovelAI(spell)
 }
