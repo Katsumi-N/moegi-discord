@@ -3,6 +3,7 @@ package widgets
 
 import (
 	"errors"
+	"log"
 	"sync"
 	"time"
 
@@ -46,6 +47,7 @@ func (w *Widget) Running() bool {
 	return running
 }
 func (w *Widget) Spawn() error {
+	log.Print(w.Embed)
 	if w.Running() {
 		return errors.New("Not running widget")
 	}

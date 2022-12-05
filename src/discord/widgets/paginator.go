@@ -66,8 +66,8 @@ func (p *Paginator) addHandlers() {
 			p.Update()
 		}
 	})
-	p.Widget.Handle(NavLeft, func(w *Widget, r *discordgo.MessageReaction) {
-		if err := p.PreviousPage(); err == nil {
+	p.Widget.Handle(NavRight, func(w *Widget, r *discordgo.MessageReaction) {
+		if err := p.NextPage(); err == nil {
 			p.Update()
 		}
 	})
@@ -126,6 +126,22 @@ func (p *Paginator) Page() (*discordgo.MessageEmbed, error) {
 	return p.Pages[p.Index], nil
 }
 
+func (p *Paginator) NextPage() error {
+	p.Lock()
+	defer p.Unlock()
+
+	if p.Index+1 >= 0 && p.Index+1 < len(p.Pages) {
+		p.Index++
+		return nil
+	}
+
+	if p.Loop {
+		p.Index = 0
+		return nil
+	}
+
+	return errors.New("Index out of bounds")
+}
 func (p *Paginator) PreviousPage() error {
 	p.Lock()
 	defer p.Unlock()

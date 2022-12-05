@@ -19,8 +19,7 @@ RUN apk add tzdata wget curl unzip make && \
     cp /usr/share/zoneinfo/Asia/Tokyo /etc/localtime && \
     echo "Asia/Tokyo" > /etc/timezone && \
     apk del tzdata && \
-    apk add --update bash curl
-
+    apk add --update bash curl udev ttf-freefont chromium chromium-chromedriver
 ENV ROOT=/go/src
 ENV PATH=$PATH:$GOPATH/bin
 

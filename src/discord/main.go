@@ -194,17 +194,15 @@ func Widget(s *discordgo.Session, m *discordgo.MessageCreate) {
 	fmt.Println("widget start")
 	p := widgets.NewPaginator(s, m.ChannelID)
 
-	p.Add(&discordgo.MessageEmbed{Description: "Page one"},
-		&discordgo.MessageEmbed{Description: "Page two"},
-		&discordgo.MessageEmbed{Description: "Page three"})
-
+	p.Add(&discordgo.MessageEmbed{Title: "Event1", Description: "hogehoge"},
+		&discordgo.MessageEmbed{Title: "Event2", Description: "fugafuga"},
+		&discordgo.MessageEmbed{Title: "Event3", Description: "piyopiyo"})
+	// p.Add(&discordgo.MessageEmbed{Title: "Page one \n hogehoge"},
+	// 	&discordgo.MessageEmbed{Description: "Page two"},
+	// 	&discordgo.MessageEmbed{Description: "Page three"})
 	p.SetPageFooters()
 
 	p.ColorWhenDone = 0xffff
-
-	p.Widget.Handle("🔫", func(w *widgets.Widget, r *discordgo.MessageReaction) {
-		s.ChannelMessageSend(m.ChannelID, "Bang!")
-	})
 
 	p.Spawn()
 
