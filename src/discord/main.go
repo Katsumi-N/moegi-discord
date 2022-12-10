@@ -188,22 +188,26 @@ func Vote(s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 func Widget(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if !strings.Contains(m.Content, "!widget") {
+	if !strings.Contains(m.Content, "!maple") {
 		return
 	}
-	fmt.Println("widget start")
+	const eventNum = 3
+	maple, err := ScrapingEventInfo(eventNum)
+	if err != nil {
+		log.Fatal(err)
+	}
 	p := widgets.NewPaginator(s, m.ChannelID)
+	ma := *maple
+	for i := 0; i < eventNum; i++ {
+		p.Add(&discordgo.MessageEmbed{
+			Title:       ma[i].Title,
+			Description: ma[i].Url + "\n\n" + ma[i].Description + "\n\n 続きはリンクから！",
+		})
+	}
 
-	p.Add(&discordgo.MessageEmbed{Title: "Event1", Description: "hogehoge"},
-		&discordgo.MessageEmbed{Title: "Event2", Description: "fugafuga"},
-		&discordgo.MessageEmbed{Title: "Event3", Description: "piyopiyo"})
-	// p.Add(&discordgo.MessageEmbed{Title: "Page one \n hogehoge"},
-	// 	&discordgo.MessageEmbed{Description: "Page two"},
-	// 	&discordgo.MessageEmbed{Description: "Page three"})
 	p.SetPageFooters()
 
 	p.ColorWhenDone = 0xffff
 
 	p.Spawn()
-
 }

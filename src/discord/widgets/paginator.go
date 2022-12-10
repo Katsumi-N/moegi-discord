@@ -66,6 +66,11 @@ func (p *Paginator) addHandlers() {
 			p.Update()
 		}
 	})
+	p.Widget.Handle(NavLeft, func(w *Widget, r *discordgo.MessageReaction) {
+		if err := p.PreviousPage(); err == nil {
+			p.Update()
+		}
+	})
 	p.Widget.Handle(NavRight, func(w *Widget, r *discordgo.MessageReaction) {
 		if err := p.NextPage(); err == nil {
 			p.Update()
