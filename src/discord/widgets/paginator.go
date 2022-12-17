@@ -50,8 +50,8 @@ func NewPaginator(ses *discordgo.Session, channelID string) *Paginator {
 		Pages:                   []*discordgo.MessageEmbed{},
 		Index:                   0,
 		Loop:                    false,
-		DeleteMessageWhenDone:   false,
-		DeleteReactionsWhenDone: false,
+		DeleteMessageWhenDone:   true,
+		DeleteReactionsWhenDone: true,
 		ColorWhenDone:           -1,
 		Widget:                  NewWidget(ses, channelID, nil),
 	}

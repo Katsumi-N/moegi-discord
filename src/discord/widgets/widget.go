@@ -109,36 +109,6 @@ func (w *Widget) Handle(emojiName string, handler WidgetHandler) error {
 	return nil
 }
 
-// よくわからん
-func (w *Widget) QueryInput(prompt string, userID string, timeout time.Duration) (*discordgo.Message, error) {
-	msg, err := w.Ses.ChannelMessageSend(w.ChannelID, "<@"+userID+">,  "+prompt)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		w.Ses.ChannelMessageDelete(msg.ChannelID, msg.ID)
-	}()
-
-	timeoutChan := make(chan int)
-	go func() {
-		time.Sleep(timeout)
-		timeoutChan <- 0
-	}()
-
-	for {
-		select {
-		case userMsg := <-nextMessageCreateC(w.Ses):
-			if userMsg.Author.ID != userID {
-				continue
-			}
-			w.Ses.ChannelMessageDelete(userMsg.ChannelID, userMsg.ID)
-			return userMsg.Message, nil
-		case <-timeoutChan:
-			return nil, errors.New("time out")
-		}
-	}
-}
-
 func (w *Widget) UpdateEmbed(embed *discordgo.MessageEmbed) (*discordgo.Message, error) {
 	if w.Message == nil {
 		return nil, errors.New("nil")

@@ -191,17 +191,28 @@ func Widget(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if !strings.Contains(m.Content, "!maple") {
 		return
 	}
-	const eventNum = 3
-	maple, err := ScrapingEventInfo(eventNum)
+	s.ChannelMessageSend(m.ChannelID, "イベントを取得中...")
+
+	region := strings.Split(m.Content, " ")[1]
+	var (
+		maple    *[]MapleInfo
+		eventNum int
+		err      error
+	)
+	if region == "jms" {
+		maple, eventNum, err = ScrapingEventInfo()
+	}
+
 	if err != nil {
 		log.Fatal(err)
 	}
+	s.ChannelMessageSend(m.ChannelID, "ウィジェットを表示するよ！")
 	p := widgets.NewPaginator(s, m.ChannelID)
 	ma := *maple
 	for i := 0; i < eventNum; i++ {
 		p.Add(&discordgo.MessageEmbed{
 			Title:       ma[i].Title,
-			Description: ma[i].Url + "\n\n" + ma[i].Description + "\n\n 続きはリンクから！",
+			Description: ma[i].Url + "\n\n" + ma[i].Date + "\n\n" + ma[i].Description,
 		})
 	}
 
