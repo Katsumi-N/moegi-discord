@@ -1,22 +1,26 @@
 package chatgpt
 
 import (
-	"io/ioutil"
+	"bufio"
 	"log"
+	"os"
 )
 
 func Chat(msgs []string) ([]string, error) {
-	setting, err := ioutil.ReadFile("moegi-settings.txt")
+	file, err := os.Open("moegi-settings.txt")
 	if err != nil {
 		log.Println("can't read setting.txt")
-		return []string{}, err
+		return nil, err
 	}
+	defer file.Close()
 
-	send := make([]SendingMessage, 0)
-	send = append(send, SendingMessage{
-		Role:    "system",
-		Content: string(setting),
-	})
+	scanner := bufio.NewScanner(file)
+	var setting string
+	for scanner.Scan() {
+		setting += scanner.Text()
+	}
+	send := []SendingMessage{{Role: "system", Content: setting}}
+
 	for _, m := range msgs {
 		send = append(send, SendingMessage{
 			Role:    "user",
