@@ -8,15 +8,16 @@ import (
 )
 
 type ConfigList struct {
-	TenantId       string
-	ServerEndpoint string
-	ServerId       string
-	Username       string
-	Password       string
-	DiscordToken   string
-	Flavor1gb      string
-	Flavor4gb      string
-	DiscordGuildId string
+	TenantId        string
+	ServerEndpoint  string
+	ServerId        string
+	Username        string
+	Password        string
+	DiscordToken    string
+	Flavor1gb       string
+	Flavor4gb       string
+	DiscordGuildId  string
+	OpenAISecretKey string
 }
 
 var Config ConfigList
@@ -29,15 +30,16 @@ func init() {
 	}
 
 	Config = ConfigList{
-		TenantId:       cfg.Section("conoha").Key("tenantId").String(),
-		ServerEndpoint: cfg.Section("conoha").Key("server_endpoint").String(),
-		ServerId:       cfg.Section("conoha").Key("serverId").String(),
-		Username:       cfg.Section("conoha").Key("username").String(),
-		Password:       cfg.Section("conoha").Key("password").String(),
-		Flavor1gb:      cfg.Section("conoha").Key("flavor_1gb").String(),
-		Flavor4gb:      cfg.Section("conoha").Key("flavor_4gb").String(),
-		DiscordToken:   cfg.Section("discord").Key("token").String(),
-		DiscordGuildId: cfg.Section("discord").Key("guildid").String(),
+		TenantId:        cfg.Section("conoha").Key("tenantId").String(),
+		ServerEndpoint:  cfg.Section("conoha").Key("server_endpoint").String(),
+		ServerId:        cfg.Section("conoha").Key("serverId").String(),
+		Username:        cfg.Section("conoha").Key("username").String(),
+		Password:        cfg.Section("conoha").Key("password").String(),
+		Flavor1gb:       cfg.Section("conoha").Key("flavor_1gb").String(),
+		Flavor4gb:       cfg.Section("conoha").Key("flavor_4gb").String(),
+		DiscordToken:    cfg.Section("discord").Key("token").String(),
+		DiscordGuildId:  cfg.Section("discord").Key("guildid").String(),
+		OpenAISecretKey: cfg.Section("chatgpt").Key("secret_key").String(),
 	}
 
 	// deploy to EC2

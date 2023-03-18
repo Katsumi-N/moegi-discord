@@ -24,7 +24,7 @@ RUN addgroup -S dockergroup && adduser -S docker -G dockergroup
 USER docker
 
 COPY --from=build ${ROOT}/server ${ROOT}
-COPY src/config.ini ${ROOT}
+COPY src/config/config.ini ${ROOT}
 
 EXPOSE 8080
 CMD ["./server"]

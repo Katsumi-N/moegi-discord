@@ -3,9 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"grpc-conoha/config"
-	conohapb "grpc-conoha/pkg/grpc"
 	"log"
+	"moegi-discord/config"
+	conohapb "moegi-discord/pkg/grpc"
 	"time"
 )
 

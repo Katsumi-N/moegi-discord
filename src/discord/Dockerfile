@@ -29,7 +29,8 @@ RUN addgroup -S dockergroup && adduser -S docker -G dockergroup
 USER docker
 
 COPY --from=build ${ROOT}/client ${ROOT}
-COPY src/config.ini ${ROOT}
-COPY src/discord/self-intro.txt ${ROOT}
+COPY src/config/config.ini ${ROOT}
+COPY src/config/moegi-settings.txt ${ROOT}
+COPY src/config/self-intro.txt ${ROOT}
 
 CMD ["./client"]

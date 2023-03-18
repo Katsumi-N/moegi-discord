@@ -13,14 +13,17 @@ import (
 	"syscall"
 	"time"
 
-	"grpc-conoha/config"
-	"grpc-conoha/discord/widgets"
-	conohapb "grpc-conoha/pkg/grpc"
+	"moegi-discord/chatgpt"
+	"moegi-discord/config"
+	"moegi-discord/discord/widgets"
+	conohapb "moegi-discord/pkg/grpc"
 
 	"github.com/bwmarrin/discordgo"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
+
+const MOEGI_ID = "818384700540321802"
 
 func main() {
 	// discord bot
@@ -33,6 +36,7 @@ func main() {
 	dg.AddHandler(Introduction)
 	dg.AddHandler(Vote)
 	dg.AddHandler(Widget)
+	dg.AddHandler(ChatGPT)
 	err = dg.Open()
 	if err != nil {
 		log.Println("error opening connection,", err)
@@ -61,13 +65,12 @@ func makeGrpcConnection(port string) (conn *grpc.ClientConn, err error) {
 }
 
 func Introduction(s *discordgo.Session, m *discordgo.MessageCreate) {
-	command := m.Content
-	if command != "!intro" {
+	if !strings.Contains(m.Content, "!intro") {
 		return
 	}
 	s.ChannelMessageSend(m.ChannelID, "自己紹介します！")
-	introMessage, err := ioutil.ReadFile("self-intro.txt")
 
+	introMessage, err := ioutil.ReadFile("self-intro.txt")
 	if err != nil {
 		log.Println("can't read self-intro.txt")
 		return
@@ -221,4 +224,18 @@ func Widget(s *discordgo.Session, m *discordgo.MessageCreate) {
 	p.ColorWhenDone = 0xffff
 
 	p.Spawn()
+}
+
+func ChatGPT(s *discordgo.Session, m *discordgo.MessageCreate) {
+	if !strings.Contains(m.Content, "<@"+MOEGI_ID+">") || len(strings.Split(m.Content, "\n")) < 2 {
+		return
+	}
+
+	msg, err := chatgpt.Chat(strings.Split(m.Content, "\n")[1:])
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	log.Println("ChatGPT returned:\n", msg)
+	s.ChannelMessageSend(m.ChannelID, strings.Join(msg, "\n"))
 }

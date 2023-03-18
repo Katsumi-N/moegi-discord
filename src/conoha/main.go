@@ -7,8 +7,8 @@ import (
 	"os"
 	"os/signal"
 
-	"grpc-conoha/config"
-	conohapb "grpc-conoha/pkg/grpc"
+	"moegi-discord/config"
+	conohapb "moegi-discord/pkg/grpc"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
