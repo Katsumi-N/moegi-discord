@@ -1,8 +1,7 @@
-# grpc-conoha
+# moegi-discord
 ## About
-gRPCを使って通信するdiscord botです
+Goで書かれたdiscord botです．
 ConohaVPSでマインクラフト用のサーバーを立てており、そのサーバーの起動、終了等をdiscordのbotを通じて行います
-その他サーバーで使う便利機能を実装していく予定です
 
 ## command
 - !conoha start -> サーバーを起動します(メモリタイプを1gb->4gbに変更した上でサーバーを起動します)
