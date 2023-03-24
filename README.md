@@ -1,5 +1,7 @@
 # moegi-discord
 ## About
+### 桜乃もえぎです！よろしくお願いします！
+
 Goで書かれたdiscord botです．
 ConohaVPSでマインクラフト用のサーバーを立てており、そのサーバーの起動、終了等をdiscordのbotを通じて行います
 
