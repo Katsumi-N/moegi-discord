@@ -7,10 +7,15 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+type Session interface {
+	ChannelMessageSendEmbed(channelID string, embed *discordgo.MessageEmbed, options ...discordgo.RequestOption) (*discordgo.Message, error)
+	MessageReactionAdd(channelID string, messageID string, emojiID string, options ...discordgo.RequestOption) error
+}
+
 var VoteEmoji = []string{Eone, Etwo, Ethree, Efour, Efive, Esix, Eseven}
 
 // コマンド例 !vote 旅行先 北海道 東京 沖縄 --Crirona
-func Vote(s *discordgo.Session, title string, options []string, cid string) *discordgo.Message {
+func Vote(s Session, title string, options []string, cid string) *discordgo.Message {
 	voteMsg := ""
 	for i, v := range options {
 		voteMsg += VoteEmoji[i] + v + "\n"
@@ -26,9 +31,9 @@ func Vote(s *discordgo.Session, title string, options []string, cid string) *dis
 		log.Fatal(err)
 	}
 
-	for i := range options {
-		s.MessageReactionAdd(cid, msg.ID, VoteEmoji[i])
-	}
+	// for i := range options {
+	// 	s.MessageReactionAdd(cid, msg.ID, VoteEmoji[i])
+	// }
 
 	return msg
 }
