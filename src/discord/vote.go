@@ -31,9 +31,9 @@ func Vote(s Session, title string, options []string, cid string) *discordgo.Mess
 		log.Fatal(err)
 	}
 
-	// for i := range options {
-	// 	s.MessageReactionAdd(cid, msg.ID, VoteEmoji[i])
-	// }
+	for i := range options {
+		s.MessageReactionAdd(cid, msg.ID, VoteEmoji[i])
+	}
 
 	return msg
 }
