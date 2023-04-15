@@ -34,7 +34,7 @@ func main() {
 	dg.Identify.Intents = discordgo.IntentsAll
 	dg.AddHandler(Minecraft)
 	dg.AddHandler(Introduction)
-	dg.AddHandler(Vote)
+	dg.AddHandler(vote)
 	dg.AddHandler(Widget)
 	dg.AddHandler(ChatGPT)
 	err = dg.Open()
@@ -113,79 +113,30 @@ func Minecraft(s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 // コマンド例 !vote 旅行先 北海道 東京 沖縄 --Crirona
-func Vote(s *discordgo.Session, m *discordgo.MessageCreate) {
+func vote(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if !strings.Contains(m.Content, "!vote") {
 		return
 	}
-
-	voteArr := strings.Split(m.Content, " ")
+	received := strings.Split(m.Content, " ")
 	isCrirona := false
-	for i, v := range voteArr {
+	for i, v := range received {
 		if v == "--crirona" {
 			isCrirona = true
-			voteArr = voteArr[:i]
+			received = received[:i]
 			break
 		}
 	}
-
-	if len(voteArr) <= 2 {
-		s.ChannelMessageSend(m.ChannelID, "選択肢を入力してね！")
+	if len(received) <= 2 {
+		return
+	} else if len(received) >= 10 {
+		return
 	}
-	if len(voteArr) >= 10 {
-		s.ChannelMessageSend(m.ChannelID, "選択肢は7個以下でお願いします！")
-	}
-	voteOptions := voteArr[2:]
-
-	voteMsg := m.Message.Author.Username + "が作った投票だよ！\n"
-
-	voteEmoji := []string{Eone, Etwo, Ethree, Efour, Efive, Esix, Eseven}
-	for i, v := range voteOptions {
-		voteMsg += voteEmoji[i] + v + "\n"
-	}
-
-	sendMsg := &discordgo.MessageEmbed{
-		Title:       voteArr[1],
-		Description: voteMsg,
-		Color:       1752220,
-	}
-	msg, err := s.ChannelMessageSendEmbed(m.ChannelID, sendMsg)
-	if err != nil {
-		log.Fatal(err)
-	}
-	for i := range voteOptions {
-		s.MessageReactionAdd(m.ChannelID, msg.ID, voteEmoji[i])
-	}
+	title, options := received[1], received[2:]
+	msg := Vote(s, title, options, m.ChannelID)
 
 	if isCrirona {
 		time.AfterFunc(5*time.Minute, func() {
-			g, err := s.State.Guild(config.Config.DiscordGuildId)
-
-			if err != nil {
-				log.Fatal(err)
-			}
-			responed := make(map[string]bool, len(g.Members))
-			for _, mem := range g.Members {
-				responed[mem.User.ID] = false
-			}
-
-			// sendMsgにリアクションをしていない人にメンションする
-			for i := range voteOptions {
-				reacters, err := s.MessageReactions(m.ChannelID, msg.ID, voteEmoji[i], 100, "", "")
-				if err != nil {
-					log.Fatal(err)
-				}
-				for _, u := range reacters {
-					responed[u.ID] = true
-				}
-			}
-			msg := ""
-			for k, v := range responed {
-				if !v {
-					msg += "<@" + k + "> "
-				}
-			}
-			s.ChannelMessageSend(m.ChannelID, msg)
-			s.ChannelMessageSend(m.ChannelID, "なぜ回答しないんだい？みんなは回答しているよ")
+			Remind(s, options, m.ChannelID, msg.ID)
 		})
 	}
 }
