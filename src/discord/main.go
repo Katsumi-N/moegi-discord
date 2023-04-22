@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"os"
 	"os/signal"
 	"strings"
@@ -196,7 +197,10 @@ func moriage(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if !strings.Contains(m.Content, "!moriage") {
 		return
 	}
+
 	s.ChannelMessageDelete(m.ChannelID, m.ID)
-	msg := "@everyone \nみんなのために盛り上げるぜ！"
-	s.ChannelMessageSend(m.ChannelID, msg)
+	msg := []string{"みんなのために盛り上げるぜ！", "みんな集まれー", "なぜ集まらないんだい？私は暇だよ？", "あほくさ"}
+	rand.Seed(time.Now().UnixNano())
+	randomNum := rand.Intn(len(msg))
+	s.ChannelMessageSend(m.ChannelID, "@everyone "+msg[randomNum])
 }
