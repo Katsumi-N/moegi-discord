@@ -37,6 +37,7 @@ func main() {
 	dg.AddHandler(vote)
 	dg.AddHandler(Widget)
 	dg.AddHandler(ChatGPT)
+	dg.AddHandler(moriage)
 	err = dg.Open()
 	if err != nil {
 		log.Println("error opening connection,", err)
@@ -189,4 +190,13 @@ func ChatGPT(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 	log.Println("ChatGPT returned:\n", msg)
 	s.ChannelMessageSend(m.ChannelID, strings.Join(msg, "\n"))
+}
+
+func moriage(s *discordgo.Session, m *discordgo.MessageCreate) {
+	if !strings.Contains(m.Content, "!moriage") {
+		return
+	}
+	s.ChannelMessageDelete(m.ChannelID, m.ID)
+	msg := "@everyone \nみんなのために盛り上げるぜ！"
+	s.ChannelMessageSend(m.ChannelID, msg)
 }
