@@ -14,9 +14,10 @@ type ConfigList struct {
 	Username        string
 	Password        string
 	DiscordToken    string
+	DiscordGuildId  string
+	DiscordAppId    string
 	Flavor1gb       string
 	Flavor4gb       string
-	DiscordGuildId  string
 	OpenAISecretKey string
 }
 
@@ -39,6 +40,7 @@ func init() {
 		Flavor4gb:       cfg.Section("conoha").Key("flavor_4gb").String(),
 		DiscordToken:    cfg.Section("discord").Key("token").String(),
 		DiscordGuildId:  cfg.Section("discord").Key("guildid").String(),
+		DiscordAppId:    cfg.Section("discord").Key("appid").String(),
 		OpenAISecretKey: cfg.Section("chatgpt").Key("secret_key").String(),
 	}
 

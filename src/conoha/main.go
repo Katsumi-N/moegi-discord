@@ -28,11 +28,11 @@ var statusName = map[string]string{
 	"VERIFY_RESIZE": "リサイズ承認待ち",
 }
 
-// マインクラフト用のConoha VPSサーバーを起動/シャッタダウン/再起動する
+// マインクラフト用のConoha VPSサーバーを起動/シャットダウン/再起動する
 func (s *conohaServer) Minecraft(req *conohapb.MinecraftRequest, stream conohapb.ConohaService_MinecraftServer) error {
 	token := GetToken(config.Config.Username, config.Config.Password, config.Config.TenantId)
-
-	if req.GetCommand() == "!conoha server" {
+	switch req.GetCommand() {
+	case "status":
 		status, _ := GetServerStatus(token)
 
 		if err := stream.Send(&conohapb.MinecraftResponse{
@@ -42,42 +42,39 @@ func (s *conohaServer) Minecraft(req *conohapb.MinecraftRequest, stream conohapb
 			return err
 		}
 		return nil
-	}
-	if req.GetCommand() == "!conoha start" {
+	case "start":
 		_, statusCode := StartServer(token, stream)
 		is_normal := true
 		if statusCode != 202 {
 			is_normal = false
 		}
 		if err := stream.Send(&conohapb.MinecraftResponse{
-			Message: "サーバーを起動しました",
+			Message: "サーバーを起動したよ",
 			Health:  is_normal,
 		}); err != nil {
 			return err
 		}
 		return nil
-	}
-	if req.GetCommand() == "!conoha stop" {
+	case "stop":
 		_, statusCode := StopServer(token, stream)
 		is_normal := true
 		if statusCode != 202 {
 			is_normal = false
 		}
 		if err := stream.Send(&conohapb.MinecraftResponse{
-			Message: "サーバーをシャットダウンしました",
+			Message: "サーバーをシャットダウンしたよ",
 			Health:  is_normal,
 		}); err != nil {
 			return err
 		}
-	}
-	if req.GetCommand() == "!conoha reboot" {
+	case "reboot":
 		_, statusCode := RebootServer(token)
 		is_normal := true
 		if statusCode != 202 {
 			is_normal = false
 		}
 		if err := stream.Send(&conohapb.MinecraftResponse{
-			Message: "サーバーを再起動しました．",
+			Message: "サーバーを再起動したよ",
 			Health:  is_normal,
 		}); err != nil {
 			return err

@@ -4,8 +4,6 @@ option go_package = "pkg/grpc";
 
 service ConohaService {
     rpc Minecraft (MinecraftRequest) returns (stream MinecraftResponse);
-    rpc SpellGet (SpellGetRequest) returns (SpellGetResponse);
-    rpc SpellPost (SpellPostRequest) returns (SpellPostResponse);
 }
 
 message MinecraftRequest {
@@ -17,29 +15,4 @@ message MinecraftResponse {
     string message = 1;
     bool health = 2;
 
-}
-
-message SpellGetRequest {
-    string author = 1;
-    string spell_name = 2;
-}
-message SpellGetResponse {
-    string spell = 1;
-    string image_path = 2;
-    string message = 3;
-}
-
-message SpellPostRequest {
-    string command = 1;
-    string author = 3;
-    string spell_name = 4;
-    string image_path = 5;
-    string seed = 6;
-    repeated string spells = 7;
-}
-
-message SpellPostResponse {
-    string spell = 1;
-    string image_path = 2;
-    string message = 3;
 }

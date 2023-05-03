@@ -24,8 +24,6 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-const MOEGI_ID = "818384700540321802"
-
 func main() {
 	// discord bot
 	discordToken := config.Config.DiscordToken
@@ -33,12 +31,66 @@ func main() {
 	defer dg.Close()
 	// dg.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsGuilds | discordgo.IntentsGuildMessages | discordgo.IntentsGuildMembers)
 	dg.Identify.Intents = discordgo.IntentsAll
+
+	// slash commands
+	appId, guildId := config.Config.DiscordAppId, config.Config.DiscordGuildId
+	_, err = dg.ApplicationCommandBulkOverwrite(appId, guildId,
+		[]*discordgo.ApplicationCommand{
+			{
+				Name:        "intro",
+				Description: "自己紹介するよ",
+			},
+			{
+				Name:        "conoha",
+				Description: "マイクラサーバーを確認/起動/停止します",
+				Options: []*discordgo.ApplicationCommandOption{
+					{
+						Type:        discordgo.ApplicationCommandOptionString,
+						Name:        "command",
+						Description: "使用コマンドを選んでね",
+						Required:    true,
+						Choices: []*discordgo.ApplicationCommandOptionChoice{
+							{
+								Name:  "status",
+								Value: "status",
+							},
+							{
+								Name:  "start",
+								Value: "start",
+							},
+							{
+								Name:  "stop",
+								Value: "stop",
+							},
+						},
+					},
+				},
+			},
+		})
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	dg.AddHandler(func(
+		s *discordgo.Session,
+		i *discordgo.InteractionCreate,
+	) {
+		data := i.ApplicationCommandData()
+		switch data.Name {
+		case "intro":
+			intro(s, i)
+		case "conoha":
+			conoha(s, i, data.Options[0].StringValue())
+		}
+	})
+
+	// TODO: スラッシュコマンドに置き換えたら削除
 	dg.AddHandler(Minecraft)
-	dg.AddHandler(Introduction)
 	dg.AddHandler(vote)
 	dg.AddHandler(Widget)
-	dg.AddHandler(ChatGPT)
 	dg.AddHandler(moriage)
+	dg.AddHandler(ChatGPT)
 	err = dg.Open()
 	if err != nil {
 		log.Println("error opening connection,", err)
@@ -66,18 +118,25 @@ func makeGrpcConnection(port string) (conn *grpc.ClientConn, err error) {
 	return conn, nil
 }
 
-func Introduction(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if !strings.Contains(m.Content, "!intro") {
-		return
-	}
-	s.ChannelMessageSend(m.ChannelID, "自己紹介します！")
-
-	introMessage, err := ioutil.ReadFile("self-intro.txt")
+func intro(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	msg, err := ioutil.ReadFile("self-intro.txt")
 	if err != nil {
-		log.Println("can't read self-intro.txt")
+		log.Fatal("can't read self-intro.txt")
 		return
 	}
-	s.ChannelMessageSend(m.ChannelID, string(introMessage))
+
+	err = s.InteractionRespond(
+		i.Interaction,
+		&discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: string(msg),
+			},
+		})
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
 }
 
 func Minecraft(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -93,7 +152,7 @@ func Minecraft(s *discordgo.Session, m *discordgo.MessageCreate) {
 	client := conohapb.NewConohaServiceClient(conn)
 
 	req := &conohapb.MinecraftRequest{
-		Command: m.Content,
+		Command: strings.Split(m.Content, " ")[1],
 	}
 	stream, err := client.Minecraft(context.Background(), req)
 	if err != nil {
@@ -103,6 +162,44 @@ func Minecraft(s *discordgo.Session, m *discordgo.MessageCreate) {
 		res, err := stream.Recv()
 
 		s.ChannelMessageSend(m.ChannelID, res.GetMessage())
+		if errors.Is(err, io.EOF) {
+			fmt.Println("all the responses have already received.")
+			break
+		}
+	}
+
+	if err != nil {
+		log.Print(err)
+	}
+}
+
+func conoha(s *discordgo.Session, i *discordgo.InteractionCreate, cmd string) {
+	err := s.InteractionRespond(
+		i.Interaction,
+		&discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "サーバーの" + cmd + " を開始します!",
+			},
+		})
+	conn, err := makeGrpcConnection("8080")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer conn.Close()
+
+	client := conohapb.NewConohaServiceClient(conn)
+
+	req := &conohapb.MinecraftRequest{
+		Command: cmd,
+	}
+	stream, err := client.Minecraft(context.Background(), req)
+	if err != nil {
+		return
+	}
+	for {
+		res, err := stream.Recv()
+		s.ChannelMessageSend(i.ChannelID, res.GetMessage())
 		if errors.Is(err, io.EOF) {
 			fmt.Println("all the responses have already received.")
 			break
@@ -180,7 +277,7 @@ func Widget(s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 func ChatGPT(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if !strings.Contains(m.Content, "<@"+MOEGI_ID+">") || len(strings.Split(m.Content, "\n")) < 2 {
+	if !strings.Contains(m.Content, "<@"+config.Config.DiscordAppId+">") || len(strings.Split(m.Content, "\n")) < 2 {
 		return
 	}
 

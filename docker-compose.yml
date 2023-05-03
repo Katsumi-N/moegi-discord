@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: ./src/conoha/Dockerfile
     networks:
-      - conoha-networks
+      - moegi-networks
     restart: always
     ports:
       - 8080:8080
@@ -14,9 +14,16 @@ services:
       context: .
       dockerfile: ./src/discord/Dockerfile
     networks:
-      - conoha-networks
+      - moegi-networks
     restart: always
-
+  voicevox_engine:
+    image: voicevox/voicevox_engine:cpu-ubuntu20.04-latest
+    # image: voicevox/voicevox_engine:nvidia-ubuntu20.04-latest
+    ports:
+      - "50021:50021"
+    tty: true
+    networks:
+      - moegi-networks
 networks:
-  conoha-networks:
+  moegi-networks:
 

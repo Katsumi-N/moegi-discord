@@ -41,23 +41,20 @@ func GetToken(userName string, password string, tenantId string) string {
 }
 
 func StartServer(token string, stream conohapb.ConohaService_MinecraftServer) (resBody []byte, statusCode int) {
-	// log.Printf("Start server")
 	// サーバーの状態を確認
 	status, flavorId := GetServerStatus(token)
 	// メモリを4gbに変更
 	if flavorId != config.Config.Flavor4gb {
 		_, statusCode = ChangeServerFlavor(token, "1gb", "4gb")
-		fmt.Printf("status %d", statusCode)
 		if statusCode != 202 {
 			log.Print("error at ChangeServerFlavor")
 			return nil, statusCode
 		}
 		// statusが"VERIFY_RESIZE"になってからconfirmする
-		// 約6分かかる
 		t := time.Now()
-		t_expect := t.Add(time.Duration(8) * time.Minute)
+		t_expect := t.Add(time.Duration(6) * time.Minute)
 		if err := stream.Send(&conohapb.MinecraftResponse{
-			Message: fmt.Sprintf("リサイズ処理がスタートしました．予定時刻 %d:%d", t_expect.Hour(), t_expect.Minute()),
+			Message: fmt.Sprintf("リサイズ処理がスタートしたよ\n予定時刻 %d:%02d", t_expect.Hour(), t_expect.Minute()),
 			Health:  true,
 		}); err != nil {
 			return nil, 503
@@ -80,7 +77,7 @@ func StartServer(token string, stream conohapb.ConohaService_MinecraftServer) (r
 		t = time.Now()
 		t_expect = t.Add(time.Duration(2) * time.Minute)
 		if err := stream.Send(&conohapb.MinecraftResponse{
-			Message: "リサイズ処理が終了しました．起動処理を開始します．",
+			Message: "リサイズ処理が終了したよ．起動処理を開始するね",
 			Health:  true,
 		}); err != nil {
 			return nil, 503
@@ -114,9 +111,9 @@ func StopServer(token string, stream conohapb.ConohaService_MinecraftServer) (re
 	status, flavorId := GetServerStatus(token)
 	if status == "ACTIVE" {
 		t := time.Now()
-		t_expect := t.Add(time.Duration(8) * time.Minute)
+		t_expect := t.Add(time.Duration(5) * time.Minute)
 		if err := stream.Send(&conohapb.MinecraftResponse{
-			Message: fmt.Sprintf("シャットダウンを開始します．予定時刻 %d:%d", t_expect.Hour(), t_expect.Minute()),
+			Message: fmt.Sprintf("シャットダウンを開始するよ\n予定時刻 %d:%02d", t_expect.Hour(), t_expect.Minute()),
 			Health:  true,
 		}); err != nil {
 			return nil, 503
@@ -139,16 +136,15 @@ func StopServer(token string, stream conohapb.ConohaService_MinecraftServer) (re
 
 	// メモリを1gbに変更
 	if err := stream.Send(&conohapb.MinecraftResponse{
-		Message: "リサイズ処理がスタートしました.",
+		Message: "リサイズ処理がスタートしたよ",
 		Health:  true,
 	}); err != nil {
 		return nil, 503
 	}
 	if flavorId == config.Config.Flavor4gb {
 		_, statusCode = ChangeServerFlavor(token, "4gb", "1gb")
-		fmt.Printf("status %d", statusCode)
 		if statusCode != 202 {
-			log.Print("error at ChangeServerFlavor")
+			log.Println("error at ChangeServerFlavor")
 			return nil, statusCode
 		}
 		// statusが"VERIFY_RESIZE"になってからconfirmする
@@ -181,7 +177,6 @@ func StopServer(token string, stream conohapb.ConohaService_MinecraftServer) (re
 			return []byte(status), 503
 		}
 	}
-
 	return resBody, statusCode // 202
 }
 
