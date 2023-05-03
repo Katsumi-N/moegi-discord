@@ -104,6 +104,12 @@ func StartServer(token string, stream conohapb.ConohaService_MinecraftServer) (r
 	if err != nil {
 		log.Print(err)
 	}
+
+	if err := stream.Send(&conohapb.MinecraftResponse{
+		Message: "サーバーを起動したよ",
+	}); err != nil {
+		return nil, 503
+	}
 	return resBody, statusCode // 202
 }
 
@@ -177,15 +183,27 @@ func StopServer(token string, stream conohapb.ConohaService_MinecraftServer) (re
 			return []byte(status), 503
 		}
 	}
+
+	if err := stream.Send(&conohapb.MinecraftResponse{
+		Message: "サーバーをシャットダウンしたよ",
+	}); err != nil {
+		log.Fatal(err)
+		return nil, 503
+	}
 	return resBody, statusCode // 202
 }
 
-func RebootServer(token string) (resBody []byte, status int) {
+func RebootServer(token string, stream conohapb.ConohaService_MinecraftServer) (resBody []byte, status int) {
 	url := config.Config.TenantId + "/servers/" + config.Config.ServerId + "/action"
 	body := fmt.Sprintf("{\"reboot\":{\"type\":\"SOFT\"}}")
 	resBody, status, err := DoRequest("POST", computeURL, url, token, body, map[string]string{})
 	if err != nil {
 		log.Print(err)
+	}
+	if err := stream.Send(&conohapb.MinecraftResponse{
+		Message: "サーバーを再起動したよ",
+	}); err != nil {
+		return nil, 503
 	}
 	return resBody, status
 }

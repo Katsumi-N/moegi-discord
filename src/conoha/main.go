@@ -34,7 +34,6 @@ func (s *conohaServer) Minecraft(req *conohapb.MinecraftRequest, stream conohapb
 	switch req.GetCommand() {
 	case "status":
 		status, _ := GetServerStatus(token)
-
 		if err := stream.Send(&conohapb.MinecraftResponse{
 			Message: statusName[string(status)],
 			Health:  true,
@@ -43,41 +42,19 @@ func (s *conohaServer) Minecraft(req *conohapb.MinecraftRequest, stream conohapb
 		}
 		return nil
 	case "start":
-		_, statusCode := StartServer(token, stream)
-		is_normal := true
-		if statusCode != 202 {
-			is_normal = false
+		_, status := StartServer(token, stream)
+		if status != 202 {
+			log.Fatal("Can not start")
 		}
-		if err := stream.Send(&conohapb.MinecraftResponse{
-			Message: "サーバーを起動したよ",
-			Health:  is_normal,
-		}); err != nil {
-			return err
-		}
-		return nil
 	case "stop":
-		_, statusCode := StopServer(token, stream)
-		is_normal := true
-		if statusCode != 202 {
-			is_normal = false
-		}
-		if err := stream.Send(&conohapb.MinecraftResponse{
-			Message: "サーバーをシャットダウンしたよ",
-			Health:  is_normal,
-		}); err != nil {
-			return err
+		_, status := StopServer(token, stream)
+		if status != 202 {
+			log.Fatal("Can not stop")
 		}
 	case "reboot":
-		_, statusCode := RebootServer(token)
-		is_normal := true
+		_, statusCode := RebootServer(token, stream)
 		if statusCode != 202 {
-			is_normal = false
-		}
-		if err := stream.Send(&conohapb.MinecraftResponse{
-			Message: "サーバーを再起動したよ",
-			Health:  is_normal,
-		}); err != nil {
-			return err
+			log.Fatal("Can not reboot")
 		}
 	}
 	grpcerr := status.Error(codes.Unimplemented, "登録されていないコマンドです")
