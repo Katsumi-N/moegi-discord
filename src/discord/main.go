@@ -114,8 +114,6 @@ func main() {
 			vote(s, i, data.Options[0].StringValue(), data.Options[1].StringValue(), data.Options[2].BoolValue())
 		}
 	})
-
-	// TODO: スラッシュコマンドに置き換えたら削除
 	dg.AddHandler(ChatGPT)
 	err = dg.Open()
 	if err != nil {
