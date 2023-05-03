@@ -10,12 +10,14 @@ import (
 type Session interface {
 	ChannelMessageSendEmbed(channelID string, embed *discordgo.MessageEmbed, options ...discordgo.RequestOption) (*discordgo.Message, error)
 	MessageReactionAdd(channelID string, messageID string, emojiID string, options ...discordgo.RequestOption) error
+	ChannelMessageSend(channelID string, content string, options ...discordgo.RequestOption) (*discordgo.Message, error)
 }
 
 var VoteEmoji = []string{Eone, Etwo, Ethree, Efour, Efive, Esix, Eseven}
 
 // コマンド例 !vote 旅行先 北海道 東京 沖縄 --Crirona
 func Vote(s Session, title string, options []string, cid string) *discordgo.Message {
+	s.ChannelMessageSend(cid, "@everyone\n")
 	voteMsg := ""
 	for i, v := range options {
 		voteMsg += VoteEmoji[i] + v + "\n"

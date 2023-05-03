@@ -16,7 +16,6 @@ import (
 
 	"moegi-discord/chatgpt"
 	"moegi-discord/config"
-	"moegi-discord/discord/widgets"
 	conohapb "moegi-discord/pkg/grpc"
 
 	"github.com/bwmarrin/discordgo"
@@ -51,18 +50,45 @@ func main() {
 						Required:    true,
 						Choices: []*discordgo.ApplicationCommandOptionChoice{
 							{
-								Name:  "status",
+								Name:  "サーバーの状態を確認",
 								Value: "status",
 							},
 							{
-								Name:  "start",
+								Name:  "サーバーを起動",
 								Value: "start",
 							},
 							{
-								Name:  "stop",
+								Name:  "サーバーを停止",
 								Value: "stop",
 							},
 						},
+					},
+				},
+			},
+			{
+				Name:        "moriage",
+				Description: "moriage隊長、動きます",
+			},
+			{
+				Name:        "vote",
+				Description: "投票つくるよ",
+				Options: []*discordgo.ApplicationCommandOption{
+					{
+						Type:        discordgo.ApplicationCommandOptionString,
+						Name:        "タイトル",
+						Description: "投票のタイトル",
+						Required:    true,
+					},
+					{
+						Type:        discordgo.ApplicationCommandOptionString,
+						Name:        "選択肢",
+						Description: "半角空白区切りで選択肢を入力 例 東京 名古屋 沖縄",
+						Required:    true,
+					},
+					{
+						Type:        discordgo.ApplicationCommandOptionBoolean,
+						Name:        "クリロナ",
+						Description: "なぜ笑うんだい?",
 					},
 				},
 			},
@@ -82,14 +108,14 @@ func main() {
 			intro(s, i)
 		case "conoha":
 			conoha(s, i, data.Options[0].StringValue())
+		case "moriage":
+			moriage(s, i)
+		case "vote":
+			vote(s, i, data.Options[0].StringValue(), data.Options[1].StringValue(), data.Options[2].BoolValue())
 		}
 	})
 
 	// TODO: スラッシュコマンドに置き換えたら削除
-	dg.AddHandler(Minecraft)
-	dg.AddHandler(vote)
-	dg.AddHandler(Widget)
-	dg.AddHandler(moriage)
 	dg.AddHandler(ChatGPT)
 	err = dg.Open()
 	if err != nil {
@@ -139,40 +165,6 @@ func intro(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 }
 
-func Minecraft(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if !strings.Contains(m.Content, "!conoha") {
-		return
-	}
-	conn, err := makeGrpcConnection("8080")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer conn.Close()
-
-	client := conohapb.NewConohaServiceClient(conn)
-
-	req := &conohapb.MinecraftRequest{
-		Command: strings.Split(m.Content, " ")[1],
-	}
-	stream, err := client.Minecraft(context.Background(), req)
-	if err != nil {
-		return
-	}
-	for {
-		res, err := stream.Recv()
-
-		s.ChannelMessageSend(m.ChannelID, res.GetMessage())
-		if errors.Is(err, io.EOF) {
-			fmt.Println("all the responses have already received.")
-			break
-		}
-	}
-
-	if err != nil {
-		log.Print(err)
-	}
-}
-
 func conoha(s *discordgo.Session, i *discordgo.InteractionCreate, cmd string) {
 	err := s.InteractionRespond(
 		i.Interaction,
@@ -211,69 +203,47 @@ func conoha(s *discordgo.Session, i *discordgo.InteractionCreate, cmd string) {
 	}
 }
 
-// コマンド例 !vote 旅行先 北海道 東京 沖縄 --Crirona
-func vote(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if !strings.Contains(m.Content, "!vote") {
+func vote(s *discordgo.Session, i *discordgo.InteractionCreate, title string, opt string, crirona bool) {
+	options := strings.Split(opt, " ")
+	err := s.InteractionRespond(
+		i.Interaction,
+		&discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "投票を作成するよ",
+			},
+		})
+	if err != nil {
+		log.Fatal(err)
 		return
 	}
-	received := strings.Split(m.Content, " ")
-	isCrirona := false
-	for i, v := range received {
-		if v == "--crirona" {
-			isCrirona = true
-			received = received[:i]
-			break
-		}
-	}
-	if len(received) <= 2 {
-		return
-	} else if len(received) >= 10 {
-		return
-	}
-	title, options := received[1], received[2:]
-	msg := Vote(s, title, options, m.ChannelID)
 
-	if isCrirona {
+	msg := Vote(s, title, options, i.ChannelID)
+
+	if crirona {
 		time.AfterFunc(5*time.Minute, func() {
-			Remind(s, options, m.ChannelID, msg.ID)
+			Remind(s, options, i.ChannelID, msg.ID)
 		})
 	}
 }
 
-func Widget(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if !strings.Contains(m.Content, "!maple") {
-		return
-	}
-	s.ChannelMessageSend(m.ChannelID, "イベントを取得中...")
-
-	region := strings.Split(m.Content, " ")[1]
-	var (
-		maple    *[]MapleInfo
-		eventNum int
-		err      error
-	)
-	if region == "jms" {
-		maple, eventNum, err = ScrapingEventInfo()
-	}
-
+func moriage(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	s.ChannelMessageDelete(i.ChannelID, i.ID)
+	msg := []string{"みんなのために盛り上げるぜ！", "みんな集まれー", "なぜ集まらないんだい？私は暇だよ？", "あほくさ"}
+	rand.Seed(time.Now().UnixNano())
+	randomNum := rand.Intn(len(msg))
+	err := s.InteractionRespond(
+		i.Interaction,
+		&discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "@everyone " + msg[randomNum],
+			},
+		})
 	if err != nil {
 		log.Fatal(err)
+		return
 	}
-	s.ChannelMessageSend(m.ChannelID, "ウィジェットを表示するよ！")
-	p := widgets.NewPaginator(s, m.ChannelID)
-	ma := *maple
-	for i := 0; i < eventNum; i++ {
-		p.Add(&discordgo.MessageEmbed{
-			Title:       ma[i].Title,
-			Description: ma[i].Url + "\n\n" + ma[i].Date + "\n\n" + ma[i].Description,
-		})
-	}
-
-	p.SetPageFooters()
-
-	p.ColorWhenDone = 0xffff
-
-	p.Spawn()
 }
 
 func ChatGPT(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -288,16 +258,4 @@ func ChatGPT(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 	log.Println("ChatGPT returned:\n", msg)
 	s.ChannelMessageSend(m.ChannelID, strings.Join(msg, "\n"))
-}
-
-func moriage(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if !strings.Contains(m.Content, "!moriage") {
-		return
-	}
-
-	s.ChannelMessageDelete(m.ChannelID, m.ID)
-	msg := []string{"みんなのために盛り上げるぜ！", "みんな集まれー", "なぜ集まらないんだい？私は暇だよ？", "あほくさ"}
-	rand.Seed(time.Now().UnixNano())
-	randomNum := rand.Intn(len(msg))
-	s.ChannelMessageSend(m.ChannelID, "@everyone "+msg[randomNum])
 }
