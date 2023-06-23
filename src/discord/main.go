@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -21,6 +22,11 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+)
+
+var (
+	memberOnlineTimestamps = make(map[string]time.Time)
+	memberMutex            = &sync.Mutex{}
 )
 
 func main() {
@@ -115,6 +121,7 @@ func main() {
 		}
 	})
 	dg.AddHandler(ChatGPT)
+	dg.AddHandler(checkOnline)
 	err = dg.Open()
 	if err != nil {
 		log.Println("error opening connection,", err)
@@ -256,4 +263,28 @@ func ChatGPT(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 	log.Println("ChatGPT returned:\n", msg)
 	s.ChannelMessageSend(m.ChannelID, strings.Join(msg, "\n"))
+}
+
+func checkOnline(s *discordgo.Session, m *discordgo.PresenceUpdate) {
+	memberMutex.Lock()
+	defer memberMutex.Unlock()
+
+	if m.User == nil {
+		return
+	}
+
+	if m.Status == discordgo.StatusOnline {
+		lastOnline, exists := memberOnlineTimestamps[m.User.ID]
+
+		if exists && time.Since(lastOnline) < 1*time.Minute {
+			return
+		}
+		user, err := s.User(m.User.ID)
+		if err != nil {
+			log.Println("error retrieving user:", err)
+		}
+		msg := fmt.Sprintf("%s がオンラインだよ! 囲めー!!", user.Username)
+		s.ChannelMessageSend(config.Config.AttendanceChannelId, msg)
+		memberOnlineTimestamps[m.User.ID] = time.Now()
+	}
 }
