@@ -276,7 +276,8 @@ func checkOnline(s *discordgo.Session, m *discordgo.PresenceUpdate) {
 	if m.Status == discordgo.StatusOnline {
 		lastOnline, exists := memberOnlineTimestamps[m.User.ID]
 
-		if exists && time.Since(lastOnline) < 1*time.Minute {
+		// 連続通知を避ける
+		if exists && time.Since(lastOnline) < 30*time.Minute {
 			return
 		}
 		user, err := s.User(m.User.ID)
