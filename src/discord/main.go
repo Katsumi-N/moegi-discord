@@ -233,22 +233,22 @@ func vote(s *discordgo.Session, i *discordgo.InteractionCreate, title string, op
 }
 
 func moriage(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	s.ChannelMessageDelete(i.ChannelID, i.ID)
-	msg := []string{"みんなのために盛り上げるぜ！", "みんな集まれー", "なぜ集まらないんだい？私は暇だよ？", "あほくさ"}
-	rand.Seed(time.Now().UnixNano())
-	randomNum := rand.Intn(len(msg))
 	err := s.InteractionRespond(
 		i.Interaction,
 		&discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Content: "@everyone " + msg[randomNum],
+				Content: "いくぜ!",
 			},
 		})
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
+	msg := []string{"みんなのために盛り上げるぜ！", "みんな集まれー", "なぜ集まらないんだい？私は暇だよ？", "あほくさ"}
+	rand.Seed(time.Now().UnixNano())
+	randomNum := rand.Intn(len(msg))
+	s.ChannelMessageSend(i.ChannelID, "@everyone "+msg[randomNum])
 }
 
 func ChatGPT(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -282,7 +282,7 @@ func checkOnline(s *discordgo.Session, m *discordgo.PresenceUpdate) {
 		}
 		user, err := s.User(m.User.ID)
 		if err != nil {
-			log.Println("error retrieving user:", err)
+			log.Fatal(err)
 		}
 		msg := fmt.Sprintf("%s がオンラインだよ! 囲めー!!", user.Username)
 		s.ChannelMessageSend(config.Config.AttendanceChannelId, msg)
