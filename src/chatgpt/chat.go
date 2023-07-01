@@ -2,6 +2,7 @@ package chatgpt
 
 import (
 	"bufio"
+	"fmt"
 	"log"
 	"os"
 )
@@ -30,8 +31,7 @@ func Chat(msgs []string) ([]string, error) {
 
 	resp, err := RequestToOpenAI(send)
 	if err != nil {
-		log.Fatal(err)
-		return []string{}, err
+		return []string{}, fmt.Errorf("error during request to openapi api: %w", err)
 	}
 
 	var resp_msgs []string

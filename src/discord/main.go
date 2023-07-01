@@ -19,6 +19,7 @@ import (
 	"moegi-discord/config"
 	conohapb "moegi-discord/pkg/grpc"
 
+	"github.com/avast/retry-go/v4"
 	"github.com/bwmarrin/discordgo"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -100,7 +101,7 @@ func main() {
 			},
 		})
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Failed to execute slash command", err)
 		return
 	}
 
@@ -142,8 +143,7 @@ func makeGrpcConnection(port string) (conn *grpc.ClientConn, err error) {
 		grpc.WithBlock(),
 	)
 	if err != nil {
-		log.Fatal("grpc cliant connection failed")
-		return nil, err
+		return nil, fmt.Errorf("failed to make grpc connection: %w", err)
 	}
 
 	return conn, nil
@@ -152,7 +152,7 @@ func makeGrpcConnection(port string) (conn *grpc.ClientConn, err error) {
 func intro(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	msg, err := ioutil.ReadFile("self-intro.txt")
 	if err != nil {
-		log.Fatal("can't read self-intro.txt")
+		log.Printf("can't read self-intro.txt")
 		return
 	}
 
@@ -165,7 +165,7 @@ func intro(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 		})
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("can't send intro", err)
 		return
 	}
 }
@@ -179,9 +179,22 @@ func conoha(s *discordgo.Session, i *discordgo.InteractionCreate, cmd string) {
 				Content: "サーバーの" + cmd + " を開始します!",
 			},
 		})
-	conn, err := makeGrpcConnection("8080")
+	var conn *grpc.ClientConn
+	err = retry.Do(
+		func() error {
+			conn, err = makeGrpcConnection("8080")
+			if err != nil {
+				log.Printf("Failed to make gRPC connection. Error: %v", err)
+				return err
+			}
+			return nil
+		},
+		retry.Attempts(3),
+		retry.Delay(1*time.Second),
+	)
+
 	if err != nil {
-		log.Fatal(err)
+		log.Print(err)
 	}
 	defer conn.Close()
 
@@ -219,7 +232,7 @@ func vote(s *discordgo.Session, i *discordgo.InteractionCreate, title string, op
 			},
 		})
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("can't send initial message", err)
 		return
 	}
 
@@ -242,7 +255,7 @@ func moriage(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 		})
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("can't send initial message", err)
 		return
 	}
 	msg := []string{"みんなのために盛り上げるぜ！", "みんな集まれー", "なぜ集まらないんだい？私は暇だよ？", "あほくさ"}
@@ -258,7 +271,7 @@ func ChatGPT(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	msg, err := chatgpt.Chat(strings.Split(m.Content, "\n")[1:])
 	if err != nil {
-		log.Fatal(err)
+		log.Print(err)
 		return
 	}
 	log.Println("ChatGPT returned:\n", msg)
@@ -282,7 +295,8 @@ func checkOnline(s *discordgo.Session, m *discordgo.PresenceUpdate) {
 		}
 		user, err := s.User(m.User.ID)
 		if err != nil {
-			log.Fatal(err)
+			log.Printf("No user found")
+			return
 		}
 		msg := fmt.Sprintf("%s がオンラインだよ! 囲めー!!", user.Username)
 		s.ChannelMessageSend(config.Config.AttendanceChannelId, msg)
