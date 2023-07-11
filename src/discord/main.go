@@ -25,6 +25,11 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+type memberOnline struct {
+	name       string
+	lastOnline time.Time
+}
+
 var (
 	memberOnlineTimestamps = make(map[string]time.Time)
 	memberMutex            = &sync.Mutex{}
@@ -101,7 +106,7 @@ func main() {
 			},
 		})
 	if err != nil {
-		log.Printf("Failed to execute slash command", err)
+		log.Println("Failed to execute slash command", err)
 		return
 	}
 
@@ -165,7 +170,7 @@ func intro(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 		})
 	if err != nil {
-		log.Printf("can't send intro", err)
+		log.Println("can't send intro", err)
 		return
 	}
 }
@@ -232,7 +237,7 @@ func vote(s *discordgo.Session, i *discordgo.InteractionCreate, title string, op
 			},
 		})
 	if err != nil {
-		log.Printf("can't send initial message", err)
+		log.Println("can't send initial message", err)
 		return
 	}
 
@@ -255,7 +260,7 @@ func moriage(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 		})
 	if err != nil {
-		log.Printf("can't send initial message", err)
+		log.Println("can't send initial message", err)
 		return
 	}
 	msg := []string{"みんなのために盛り上げるぜ！", "みんな集まれー", "なぜ集まらないんだい？私は暇だよ？", "あほくさ"}
