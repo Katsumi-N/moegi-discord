@@ -1,21 +1,28 @@
 package main
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/bwmarrin/discordgo"
 )
 
-type MockSession struct{}
+type MockSession struct {
+	MockChannelMessageSendEmbed func(channelID string, embed *discordgo.MessageEmbed, options ...discordgo.RequestOption) (*discordgo.Message, error)
+	MockMessageReactionAdd      func(channelID string, messageID string, emojiID string, options ...discordgo.RequestOption) error
+	MockChannelMessageSend      func(channelID string, content string, options ...discordgo.RequestOption) (*discordgo.Message, error)
+}
 
 func (m *MockSession) ChannelMessageSendEmbed(channelID string, embed *discordgo.MessageEmbed, options ...discordgo.RequestOption) (*discordgo.Message, error) {
 	// return &discordgo.Message{Embeds: []*discordgo.MessageEmbed{embed}}, nil
-	return nil, nil
+	return m.MockChannelMessageSendEmbed(channelID, embed)
 }
 
 func (m *MockSession) MessageReactionAdd(channelID string, messageID string, emojiID string, options ...discordgo.RequestOption) error {
-	return nil
+	return m.MockMessageReactionAdd(channelID, messageID, emojiID)
+}
+
+func (m *MockSession) ChannelMessageSend(channelID string, content string, options ...discordgo.RequestOption) (*discordgo.Message, error) {
+	return m.ChannelMessageSend(channelID, content)
 }
 
 func TestVote(t *testing.T) {
@@ -28,24 +35,35 @@ func TestVote(t *testing.T) {
 		cid     string
 	}
 
+	// Table(テストケース)
 	tests := []struct {
 		name string
 		args args
-		want *discordgo.Message
+		want *discordgo.MessageEmbed
 	}{
 		// TODO: Add test cases.
 		{
-			name: "Correct message",
-			args: args{*mockSession, "test", []string{"op1", "op2", "op3"}, "channel"},
-			want: nil,
+			name: "Vote created with correct Message",
+			args: args{*mockSession, "test", []string{"fish", "beef", "chicken"}, "channelId"},
+			want: &discordgo.MessageEmbed{
+				Title:       "vote_title",
+				Description: "vote description",
+				Color:       1752220,
+			},
 		},
 	}
 
 	for _, tt := range tests {
+		s := &MockSession{
+			MockChannelMessageSendEmbed: func(channelID string, embed *discordgo.MessageEmbed, options ...discordgo.RequestOption) (*discordgo.Message, error) {
+				if channelID != tt.args.cid || embed != tt.want {
+					t.Errorf("ChannelMessageSendEmbed was called with incorrect arguments. got: %v, %v, want: %v, %v", channelID, embed, tt.args.cid, tt.want)
+				}
+				return nil, nil
+			},
+		}
 		t.Run(tt.name, func(t *testing.T) {
-			if got := Vote(&tt.args.s, tt.args.title, tt.args.options, tt.args.cid); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Vote() = %v, want %v", got, tt.want)
-			}
+			Vote(s, tt.args.title, tt.args.options, tt.args.cid)
 		})
 	}
 }
