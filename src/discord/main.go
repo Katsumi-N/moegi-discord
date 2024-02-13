@@ -104,6 +104,18 @@ func main() {
 					},
 				},
 			},
+			{
+				Name:        "choose",
+				Description: "選択肢からランダムで選ぶよ",
+				Options: []*discordgo.ApplicationCommandOption{
+					{
+						Type:        discordgo.ApplicationCommandOptionString,
+						Name:        "選択肢",
+						Description: "空白区切りで入力してね",
+						Required:    true,
+					},
+				},
+			},
 		})
 	if err != nil {
 		log.Println("Failed to execute slash command", err)
@@ -124,6 +136,8 @@ func main() {
 			moriage(s, i)
 		case "vote":
 			vote(s, i, data.Options[0].StringValue(), data.Options[1].StringValue(), data.Options[2].BoolValue())
+		case "choose":
+			randomSelect(s, i, data.Options[0].StringValue())
 		}
 	})
 	dg.AddHandler(ChatGPT)
@@ -307,4 +321,26 @@ func checkOnline(s *discordgo.Session, m *discordgo.PresenceUpdate) {
 		s.ChannelMessageSend(config.Config.AttendanceChannelId, msg)
 		memberOnlineTimestamps[m.User.ID] = time.Now()
 	}
+}
+
+func randomSelect(s *discordgo.Session, i *discordgo.InteractionCreate, optStr string) {
+	options := strings.Split(optStr, " ")
+	msg := fmt.Sprintf("ここからえらぶよ! 👉 %s", optStr)
+	err := s.InteractionRespond(
+		i.Interaction,
+		&discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: msg,
+			},
+		})
+	if err != nil {
+		log.Println("can't send initial message", err)
+		return
+	}
+
+	rnd := rand.New(rand.NewSource(78))
+	randomNum := rnd.Intn(len(options))
+	msg = fmt.Sprintf("選ばれたのは... %s だ!", options[randomNum])
+	s.ChannelMessageSend(i.ChannelID, msg)
 }
