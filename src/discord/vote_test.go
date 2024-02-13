@@ -62,6 +62,7 @@ func TestVote(t *testing.T) {
 				return nil, nil
 			},
 		}
+		// Failed to read file: open config.ini: no such file or directory
 		t.Run(tt.name, func(t *testing.T) {
 			Vote(s, tt.args.title, tt.args.options, tt.args.cid)
 		})
