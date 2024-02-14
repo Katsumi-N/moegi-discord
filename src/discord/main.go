@@ -44,8 +44,8 @@ func main() {
 	dg.Identify.Intents = discordgo.IntentsAll
 
 	// slash commands
-	appId, guildId := config.Config.DiscordAppId, config.Config.DiscordGuildId
-	_, err = dg.ApplicationCommandBulkOverwrite(appId, guildId,
+	appId, _ := config.Config.DiscordAppId, config.Config.DiscordGuildId
+	_, err = dg.ApplicationCommandBulkOverwrite(appId, "",
 		[]*discordgo.ApplicationCommand{
 			{
 				Name:        "intro",
